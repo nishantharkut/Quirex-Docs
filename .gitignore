@@ -1,0 +1,36 @@
+# Node/Vite/React
+node_modules/
+dist/
+.env
+*.local
+
+# System
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# VSCode
+.vscode/
+
+# Build output
+blog-website/dist/
+
+# OS junk
+*.swp
+*.swo
+
+# Python (if any)
+__pycache__/
+*.pyc
+
+# Misc
+*.log
+.idea/
+*.iml
+
+# Ignore generated content index
+blog-website/src/content/contentIndex.generated.js
