@@ -1,248 +1,225 @@
-# GSoC Journey Blog
+# Inkwell — Open Source Documentation Platform
 
-A minimal, responsive blog website built with React to display and manage markdown files. Perfect for documenting your GSoC journey or any markdown-based content.
+A beautiful, self-hostable documentation platform built with React, Vite, and TypeScript. No backend required by default — everything runs client-side with localStorage.
 
-## ✨ Features
+## Quick Start
 
-### 🎨 **Design & User Experience**
-- **Responsive Design**: Works perfectly on mobile, tablet, and desktop
-- **Light/Dark Mode**: Automatic system preference detection with manual toggle
-- **Modern UI**: Clean, minimal design using TailwindCSS
-- **Smooth Transitions**: Beautiful hover effects and micro-interactions
-
-### 📝 **Blog Features**
-- **Markdown Rendering**: Full GitHub-flavored markdown support
-- **Syntax Highlighting**: Code blocks with syntax highlighting
-- **Search Functionality**: Search across all post titles and content
-- **Category Filtering**: Filter posts by folder/category
-- **Reading Time**: Automatic reading time estimation
-- **Meta Information**: Author, date, tags, and categories
-- **Share Functionality**: Native share API with clipboard fallback
-
-### ⚙️ **Admin Panel**
-- **File Upload**: Drag-and-drop markdown file upload
-- **File Management**: Edit, delete, and create new markdown files
-- **Live Preview**: See changes immediately after saving
-- **Status Feedback**: Real-time upload and save status
-
-### 🚀 **Performance**
-- **Fast Loading**: Optimized bundle size and loading
-- **SEO Friendly**: Proper meta tags and semantic HTML
-- **Accessibility**: WCAG compliant with proper ARIA labels
-
-## 🛠️ Tech Stack
-
-- **Frontend**: React 18 with Vite
-- **Styling**: TailwindCSS with custom dark mode
-- **Markdown**: react-markdown with remark/rehype plugins
-- **Syntax Highlighting**: react-syntax-highlighter
-- **Icons**: Lucide React
-- **Build Tool**: Vite
-
-## 📦 Installation
-
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-
-### Setup Instructions
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd blog-website
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Add your markdown files**
-   - Place your `.md` files in `public/md-files/`
-   - Organize them in subfolders for categories
-   - Add frontmatter for metadata (optional but recommended)
-
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-5. **Open your browser**
-   - Navigate to `http://localhost:5173`
-   - Your blog is now running! 🎉
-
-## 📁 Project Structure
-
-```
-blog-website/
-├── public/
-│   └── md-files/              # Your markdown files go here
-│       ├── README.md
-│       ├── category1/
-│       │   └── post1.md
-│       └── category2/
-│           └── post2.md
-├── src/
-│   ├── components/
-│   │   ├── BlogList.jsx       # Post listing component
-│   │   ├── BlogPost.jsx       # Individual post view
-│   │   ├── Navigation.jsx     # Navigation and search
-│   │   ├── AdminPanel.jsx     # File management interface
-│   │   └── ThemeToggle.jsx    # Dark mode toggle
-│   ├── hooks/
-│   │   └── useMarkdownFiles.js # Custom hook for file loading
-│   ├── App.jsx                # Main application component
-│   ├── main.jsx               # App entry point
-│   └── index.css              # Global styles
-├── package.json
-├── tailwind.config.js
-├── vite.config.js
-└── README.md
+```bash
+git clone https://github.com/your-repo/inkwell.git
+cd inkwell
+npm install
+npm run dev
 ```
 
-## 📝 Markdown Frontmatter
+## Features
 
-Add frontmatter to your markdown files for better metadata:
+- ✍️ **Full Markdown** — GFM tables, task lists, syntax highlighting for 100+ languages
+- 📦 **Custom components** — Callouts (`:::info`, `:::warning`, `:::tip`), collapsible sections (`:::details`)
+- 🔍 **Instant search** — ⌘K fuzzy search across all docs
+- 🌙 **Dark mode** — System-aware with hand-tuned palettes
+- ✏️ **Rich editor** — Toolbar, keyboard shortcuts, undo/redo, auto-list continuation
+- 📁 **Bulk import** — Drag-and-drop `.md` files with frontmatter parsing
+- 📱 **PWA** — Installable, offline-capable
+- 👍 **Feedback** — "Was this helpful?" widget per page
+- 🕐 **Revision history** — Auto-saved revisions with diff view
+- ⌨️ **Keyboard-first** — Navigate, search, and edit without leaving the keyboard
+
+## Configuration
+
+Edit `src/lib/siteConfig.ts` to customize:
+
+```typescript
+export const siteConfig = {
+  name: "your-project",       // Header brand name
+  badge: "docs",              // Badge next to name
+  heading: "Documentation",   // Homepage heading
+  tagline: "Your tagline",    // Homepage subtitle
+  footer: "Your footer text",
+  defaultAuthor: "Admin",
+  navLinks: [...],            // Header navigation
+  externalLinks: [...],       // GitHub, Twitter, etc.
+};
+```
+
+## Custom Markdown Components
+
+### Callouts
 
 ```markdown
----
-title: Your Post Title
-date: 2026-03-07
-author: Your Name
-category: general
-tags: tag1, tag2, tag3
-excerpt: Brief description of your post
-readingTime: 5
----
+:::info
+This is an info callout.
+:::
 
-# Your post content here...
+:::warning Important notice
+Be careful with this operation.
+:::
+
+:::tip Pro tip
+You can also use `:::danger` and `:::note`.
+:::
 ```
 
-### Supported Frontmatter Fields
-- `title`: Post title (auto-extracted from H1 if not provided)
-- `date`: Publication date (auto-generated if not provided)
-- `author`: Author name (defaults to "Anonymous")
-- `category`: Post category (extracted from folder path)
-- `tags`: Comma-separated list of tags
-- `excerpt`: Post excerpt (auto-generated if not provided)
-- `readingTime`: Reading time in minutes (auto-calculated)
+### Collapsible Sections
 
-## 🎨 Customization
+```markdown
+:::details Click to expand
+Hidden content goes here.
+:::
+```
 
-### Colors & Theme
-The theme uses CSS custom properties. Modify `src/index.css` to change colors:
+## Project Structure
 
-```css
-:root {
-  --primary: 222.2 47.4% 11.2%;
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  /* ... more colors */
+```
+src/
+├── components/
+│   ├── markdown/          # Custom MD components (Callout, Tabs, Collapsible)
+│   ├── CodeBlock.tsx       # Syntax highlighting
+│   ├── FeedbackWidget.tsx  # Thumbs up/down
+│   ├── Header.tsx          # Site header
+│   ├── MarkdownEditor.tsx  # Rich editor with toolbar
+│   ├── MarkdownRenderer.tsx # MD → React renderer
+│   ├── Sidebar.tsx         # Doc navigation
+│   └── SearchDialog.tsx    # ⌘K search
+├── lib/
+│   ├── content.ts          # Post/category CRUD (localStorage)
+│   ├── revisions.ts        # Revision history & diffing
+│   ├── siteConfig.ts       # Site configuration
+│   └── utils.ts
+├── pages/
+│   ├── Index.tsx           # Landing page
+│   ├── PostPage.tsx        # Doc viewer
+│   └── AdminPage.tsx       # Content management
+└── types/
+    └── blog.ts
+```
+
+## Self-Hosting
+
+### Option 1: Static hosting (default)
+
+Build and deploy to any static host (Vercel, Netlify, GitHub Pages, Cloudflare Pages):
+
+```bash
+npm run build
+# Deploy the `dist/` folder
+```
+
+Data is stored in the browser's localStorage. Great for personal docs.
+
+### Option 2: With your own backend
+
+To share data across users, replace the localStorage functions in `src/lib/content.ts` with API calls to your backend. The interface is simple:
+
+```typescript
+// These are the functions to replace:
+getPosts(): Post[]
+getPost(slug: string): Post | undefined
+savePost(post: Post): void
+deletePost(id: string): void
+getCategories(): Category[]
+saveCategory(category: Category): void
+deleteCategory(id: string): void
+```
+
+Example with a REST API:
+
+```typescript
+// src/lib/content.ts — replace localStorage calls
+const API_URL = import.meta.env.VITE_API_URL || "/api";
+
+export async function getPosts(): Promise<Post[]> {
+  const res = await fetch(`${API_URL}/posts`);
+  return res.json();
+}
+
+export async function savePost(post: Post): Promise<void> {
+  await fetch(`${API_URL}/posts/${post.id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(post),
+  });
 }
 ```
 
-### Typography
-TailwindCSS typography plugin is configured for clean markdown rendering. Modify `tailwind.config.js` to customize typography styles.
+### Option 3: File-based backend (Node.js)
 
-### Layout
-Adjust the container max-width in `src/App.jsx`:
-```jsx
-<main className="container mx-auto px-4 py-8 max-w-4xl">
+Create a simple Express server that reads/writes `.md` files from disk:
+
+```bash
+mkdir server && cd server
+npm init -y
+npm install express cors
 ```
 
-## 🚀 Deployment
+```javascript
+// server/index.js
+const express = require("express");
+const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
 
-### Static Hosting (Recommended)
-The app builds to static files and can be deployed anywhere:
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-1. **Build the app**
-   ```bash
-   npm run build
-   ```
+const DOCS_DIR = path.join(__dirname, "../docs");
 
-2. **Deploy to your favorite platform**
-   - **Netlify**: Drag and drop the `dist` folder
-   - **Vercel**: Connect your repository
-   - **GitHub Pages**: Use GitHub Actions
-   - **Firebase Hosting**: `firebase deploy`
+app.get("/api/posts", (req, res) => {
+  const files = fs.readdirSync(DOCS_DIR).filter(f => f.endsWith(".md"));
+  const posts = files.map(file => {
+    const raw = fs.readFileSync(path.join(DOCS_DIR, file), "utf-8");
+    // Parse frontmatter and return post object
+    return parseFrontmatter(raw, file);
+  });
+  res.json(posts);
+});
 
-### Environment Variables
-No environment variables required for basic functionality. For advanced features, you can add:
-- `VITE_ADMIN_PASSWORD`: Simple password protection for admin panel
-- `VITE_SITE_URL`: Your site URL for better SEO
+app.listen(3001, () => console.log("API running on :3001"));
+```
 
-## 🔧 Development
+Then set `VITE_API_URL=http://localhost:3001/api` in your `.env`.
 
-### Available Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
+### Docker
 
-### Adding New Features
-The codebase is organized for easy extension:
-- Components are self-contained and reusable
-- Custom hooks separate logic from UI
-- Styles use utility-first TailwindCSS classes
+```dockerfile
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-### Admin Panel Features
-The admin panel includes:
-- File upload with drag-and-drop
-- In-place markdown editing
-- File deletion with confirmation
-- Real-time status updates
-- Create new files from templates
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+```
 
-## 📱 Responsive Design
+```nginx
+# nginx.conf
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+    index index.html;
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
 
-The blog is fully responsive with:
-- **Mobile** (< 768px): Single column, collapsible navigation
-- **Tablet** (768px - 1024px): Two-column post grid
-- **Desktop** (> 1024px): Three-column post grid
+```bash
+docker build -t inkwell .
+docker run -p 8080:80 inkwell
+```
 
-## 🌙 Dark Mode
+## Contributing
 
-Dark mode features:
-- **System Preference**: Automatically detects user's preferred theme
-- **Manual Toggle**: Users can switch between themes
-- **Persistent**: Theme preference saved to localStorage
-- **Smooth Transitions**: Animated theme switching
+1. Fork the repo
+2. Create a branch (`git checkout -b feature/my-feature`)
+3. Commit changes (`git commit -am 'Add feature'`)
+4. Push (`git push origin feature/my-feature`)
+5. Open a Pull Request
 
-## 🐛 Troubleshooting
+## License
 
-### Common Issues
-
-1. **Markdown files not loading**
-   - Check file paths in `src/hooks/useMarkdownFiles.js`
-   - Ensure files are in `public/md-files/` folder
-   - Verify file names match exactly
-
-2. **Build errors**
-   - Clear node_modules and reinstall: `rm -rf node_modules && npm install`
-   - Check Node.js version: `node --version` (should be 18+)
-
-3. **Styling issues**
-   - Ensure TailwindCSS is properly configured
-   - Check that `src/index.css` is imported in `main.jsx`
-
-### Getting Help
-- Check the browser console for errors
-- Verify all dependencies are installed
-- Ensure file paths are correct for your setup
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-## 📞 Support
-
-If you have any questions or need help setting up the blog, please create an issue in the repository.
-
----
-
-**Happy Blogging! 📝✨**
+MIT
