@@ -252,18 +252,30 @@ export default function AdminPage() {
     if (!user) return;
     let imported = 0;
     for (const post of posts) {
-      const { error } = await supabase.from("posts").insert({
-        title: post.title,
-        slug: post.slug,
-        content: post.content,
-        excerpt: post.excerpt,
-        category: post.category,
-        tags: post.tags,
-        published: false,
-        user_id: user.id,
-      });
-      if (error) {
-        toast.error(`Failed to import "${post.title}": ${error.message}`);
+      // Try the clean slug first; on a duplicate-key collision add a suffix
+      let slug = post.slug;
+      let attempt = 0;
+      let insertError: { message: string; code?: string } | null = null;
+      do {
+        const { error } = await supabase.from("posts").insert({
+          title: post.title,
+          slug,
+          content: post.content,
+          excerpt: post.excerpt,
+          category: post.category,
+          tags: post.tags,
+          published: post.published,
+          user_id: user.id,
+        });
+        insertError = error;
+        if (insertError?.code === "23505") {
+          attempt++;
+          slug = `${post.slug}-${attempt}`;
+        }
+      } while (insertError?.code === "23505" && attempt <= 10);
+
+      if (insertError) {
+        toast.error(`Failed to import "${post.title}": ${insertError.message}`);
       } else {
         imported++;
       }

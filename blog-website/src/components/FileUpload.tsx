@@ -103,7 +103,8 @@ export function FileUpload({ defaultCategory, onComplete, onImport }: FileUpload
     const posts: Post[] = pending.map((f) => ({
       id: generateId(),
       title: f.title,
-      slug: generateSlug(f.title) + "-" + Date.now().toString(36),
+      // Clean slug based on title — AdminPage will handle suffix on collision
+      slug: generateSlug(f.title) || f.filename.replace(/\.(md|mdx|markdown)$/, ""),
       excerpt: f.content.substring(0, 120).replace(/[#*\n]/g, "").trim(),
       content: f.content,
       category: f.category,
