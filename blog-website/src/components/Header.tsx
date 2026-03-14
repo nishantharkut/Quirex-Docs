@@ -95,7 +95,7 @@ export function Header() {
             <ThemeToggle />
 
             {/* Write button (logged in) */}
-            {!loading && user && (
+            {!loading && user && isEditor && (
               <Link
                 to="/admin"
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -133,12 +133,14 @@ export function Header() {
                         >
                           <LayoutDashboard className="w-4 h-4" /> Dashboard
                         </button>
-                        <button
-                          onClick={() => { navigate("/admin"); setUserMenu(false); }}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-[14px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                        >
-                          <PenLine className="w-4 h-4" /> Write a post
-                        </button>
+                        {isEditor && (
+                          <button
+                            onClick={() => { navigate("/admin"); setUserMenu(false); }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-[14px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          >
+                            <PenLine className="w-4 h-4" /> Write a post
+                          </button>
+                        )}
                         {isAdmin && (
                           <button
                             onClick={() => { navigate("/users"); setUserMenu(false); }}

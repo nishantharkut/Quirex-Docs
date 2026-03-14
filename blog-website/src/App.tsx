@@ -67,7 +67,7 @@ const App = () => {
                       <Route path="/api-reference" element={<ApiReferencePage />} />
                       <Route path="/tags" element={<TagsPage />} />
                       <Route path="/admin" element={
-                        <ProtectedRoute>
+                        <ProtectedRoute requiredRole="editor">
                           <AdminPage />
                         </ProtectedRoute>
                       } />

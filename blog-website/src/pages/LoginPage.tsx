@@ -1,20 +1,31 @@
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { FullPageLoader } from "@/components/Loaders";
+import { supabase } from "@/integrations/supabase/client";
 
 type Mode = "login" | "signup" | "magic-link" | "forgot";
 
 export default function LoginPage() {
-  const { user, signIn, signUp, signInWithGoogle, signInWithMagicLink } = useAuth();
+  const { user, loading: authLoading, isEditor, signIn, signUp, signInWithGoogle, signInWithMagicLink } = useAuth();
+  const location = useLocation();
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (user) return <Navigate to="/dashboard" replace />;
+  const redirectFrom = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
+  const fromPath = redirectFrom?.pathname || "";
+  const isSafePath = fromPath.startsWith("/") && !fromPath.startsWith("//") && fromPath !== "/login";
+  const redirectTarget = isSafePath
+    ? `${fromPath}${redirectFrom?.search || ""}${redirectFrom?.hash || ""}`
+    : (isEditor ? "/admin" : "/dashboard");
+
+  if (authLoading) return <FullPageLoader message="Checking session..." />;
+  if (user) return <Navigate to={redirectTarget} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,13 +43,15 @@ export default function LoginPage() {
         if (error) toast.error(error.message);
         else toast.success("Magic link sent! Check your email.");
       } else if (mode === "forgot") {
-        const { default: supabase } = await import("@/integrations/supabase/client").then(m => ({ default: m.supabase }));
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) toast.error(error.message);
         else toast.success("Password reset link sent!");
       }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Authentication failed";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
