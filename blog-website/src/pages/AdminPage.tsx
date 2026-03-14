@@ -134,21 +134,36 @@ export default function AdminPage() {
   const handleSavePost = async (postToSave: Post | null = editingPost, keepEditorOpen = true) => {
     if (!postToSave || !user || saving) return;
     setSaving(true);
-    const newSlug = generateSlug(postToSave.title) || postToSave.slug;
-    const updated = { ...postToSave, slug: newSlug };
+    // Only replace the slug when it still holds the auto-generated placeholder
+    // (untitled-<timestamp>). For every other post keep the existing slug so we
+    // never collide with the posts_user_id_slug_key unique constraint.
+    const isPlaceholderSlug = /^untitled-\d+/.test(postToSave.slug);
+    const newSlug = isPlaceholderSlug
+      ? generateSlug(postToSave.title) || postToSave.slug
+      : postToSave.slug;
+    let updated = { ...postToSave, slug: newSlug };
 
-    const { error } = await supabase
-      .from("posts")
-      .update({
-        title: updated.title,
-        slug: updated.slug,
-        content: updated.content,
-        excerpt: updated.excerpt,
-        category: updated.category,
-        tags: updated.tags,
-        published: updated.published,
-      })
-      .eq("id", updated.id);
+    // Attempt save; if we hit a duplicate-slug constraint retry with a suffix.
+    let attempt = 0;
+    let error: { message: string; code?: string } | null = null;
+    do {
+      const slugCandidate = attempt === 0 ? updated.slug : `${newSlug}-${attempt}`;
+      updated = { ...updated, slug: slugCandidate };
+      const result = await supabase
+        .from("posts")
+        .update({
+          title: updated.title,
+          slug: updated.slug,
+          content: updated.content,
+          excerpt: updated.excerpt,
+          category: updated.category,
+          tags: updated.tags,
+          published: updated.published,
+        })
+        .eq("id", updated.id);
+      error = result.error;
+      attempt++;
+    } while (error?.code === "23505" && attempt <= 10);
 
     setSaving(false);
     if (error) {
@@ -297,7 +312,7 @@ export default function AdminPage() {
               </button>
 
               <button
-                onClick={handleSavePost}
+                onClick={() => handleSavePost()}
                 className="flex items-center gap-1 px-3 py-1 text-[12px] rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium"
               >
                 <Save className="w-3 h-3" /> Save
