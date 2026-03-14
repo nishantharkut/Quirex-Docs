@@ -125,25 +125,23 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick links for admin/editor */}
-        {(isAdmin || isEditor) && (
-          <div className="flex flex-wrap gap-2 mb-8">
+        {/* Quick links for users */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          <Link
+            to="/admin"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <Settings className="w-3.5 h-3.5" /> Workspace
+          </Link>
+          {isAdmin && (
             <Link
-              to="/admin"
+              to="/analytics"
               className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
-              <Settings className="w-3.5 h-3.5" /> Admin Panel
+              <BarChart3 className="w-3.5 h-3.5" /> Analytics
             </Link>
-            {isAdmin && (
-              <Link
-                to="/analytics"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                <BarChart3 className="w-3.5 h-3.5" /> Analytics
-              </Link>
-            )}
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Filter tabs */}
         <div className="flex gap-0.5 mb-5 border-b border-border">

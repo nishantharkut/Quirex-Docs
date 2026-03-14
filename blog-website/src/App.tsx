@@ -113,7 +113,7 @@ const App = () => {
                       <Route path="/api-reference" element={<ApiReferencePage />} />
                       <Route path="/tags" element={<TagsPage />} />
                       <Route path="/admin" element={
-                        <ProtectedRoute requiredRole="editor">
+                        <ProtectedRoute>
                           <AdminPage />
                         </ProtectedRoute>
                       } />
@@ -123,7 +123,7 @@ const App = () => {
                         </ProtectedRoute>
                       } />
                       <Route path="/doc-health" element={
-                        <ProtectedRoute requiredRole="editor">
+                        <ProtectedRoute>
                           <DocHealthPage />
                         </ProtectedRoute>
                       } />
@@ -143,7 +143,7 @@ const App = () => {
                         </ProtectedRoute>
                       } />
                       <Route path="/import/notion" element={
-                        <ProtectedRoute requiredRole="editor">
+                        <ProtectedRoute>
                           <NotionImportPage />
                         </ProtectedRoute>
                       } />

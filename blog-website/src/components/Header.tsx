@@ -30,7 +30,7 @@ export function Header() {
   const visibleNavLinks = siteConfig.navLinks.filter((link) => {
     if (!roleGatedPaths.some((p) => link.href === p)) return true;
     if (loading || !user) return false;
-    if (link.href === "/admin" || link.href === "/import/notion" || link.href === "/doc-health") return isEditor;
+    if (link.href === "/admin" || link.href === "/import/notion" || link.href === "/doc-health") return true;
     return isAdmin;
   });
 
@@ -95,7 +95,7 @@ export function Header() {
             <ThemeToggle />
 
             {/* Write button (logged in) */}
-            {!loading && user && isEditor && (
+            {!loading && user && (
               <Link
                 to="/admin"
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -133,14 +133,12 @@ export function Header() {
                         >
                           <LayoutDashboard className="w-4 h-4" /> Dashboard
                         </button>
-                        {isEditor && (
-                          <button
-                            onClick={() => { navigate("/admin"); setUserMenu(false); }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-[14px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                          >
-                            <PenLine className="w-4 h-4" /> Write a post
-                          </button>
-                        )}
+                        <button
+                          onClick={() => { navigate("/admin"); setUserMenu(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-[14px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        >
+                          <PenLine className="w-4 h-4" /> Write a post
+                        </button>
                         {isAdmin && (
                           <button
                             onClick={() => { navigate("/users"); setUserMenu(false); }}

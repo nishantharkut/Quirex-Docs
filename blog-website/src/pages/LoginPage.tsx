@@ -22,7 +22,7 @@ export default function LoginPage() {
   const isSafePath = fromPath.startsWith("/") && !fromPath.startsWith("//") && fromPath !== "/login";
   const redirectTarget = isSafePath
     ? `${fromPath}${redirectFrom?.search || ""}${redirectFrom?.hash || ""}`
-    : (isEditor ? "/admin" : "/dashboard");
+    : "/dashboard";
 
   if (authLoading) return <FullPageLoader message="Checking session..." />;
   if (user) return <Navigate to={redirectTarget} replace />;

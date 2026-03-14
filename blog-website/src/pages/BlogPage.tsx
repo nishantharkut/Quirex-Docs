@@ -144,8 +144,8 @@ export default function BlogPage() {
             </p>
           </div>
 
-          {/* Write button for editors */}
-          {user && isEditor && (
+          {/* Write button for users */}
+          {user && (
             <Link
               to="/admin"
               className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity shrink-0"
@@ -172,11 +172,11 @@ export default function BlogPage() {
             <PenLine className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-muted-foreground text-[15px] mb-1">No published posts yet.</p>
             <p className="text-muted-foreground/60 text-[13px]">
-              {user && isEditor
+              {user
                 ? "Head to the admin panel to write your first post."
                 : "Check back soon for new content."}
             </p>
-            {user && isEditor && (
+            {user && (
               <Link
                 to="/admin"
                 className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 text-[13px] font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
