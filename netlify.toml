@@ -1,0 +1,22 @@
+[build]
+  base    = "blog-website"
+  command = "npm run build"
+  publish = "blog-website/dist"
+
+# SPA fallback — every route serves index.html so React Router handles navigation
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# Cache hashed static assets forever
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Don't cache index.html so users always get the latest deploy
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
