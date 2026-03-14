@@ -1,7 +1,7 @@
 [build]
   base    = "blog-website"
   command = "npm run build"
-  publish = "blog-website/dist"
+  publish = "dist"
 
 # SPA fallback — every route serves index.html so React Router handles navigation
 [[redirects]]
