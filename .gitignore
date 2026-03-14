@@ -34,3 +34,6 @@ __pycache__/
 
 # Ignore generated content index
 blog-website/src/content/contentIndex.generated.js
+
+# Private docs (never commit)
+blog-website/public/md-files/
