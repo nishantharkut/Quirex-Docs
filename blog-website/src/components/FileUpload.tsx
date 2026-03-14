@@ -6,6 +6,8 @@ import { Post } from "@/types/blog";
 interface FileUploadProps {
   defaultCategory: string;
   onComplete: () => void;
+  /** When provided, called instead of the localStorage savePost fallback */
+  onImport?: (posts: Post[]) => Promise<void>;
 }
 
 interface ParsedFile {
@@ -50,7 +52,7 @@ function parseFrontmatter(raw: string): { meta: Record<string, any>; content: st
   return { meta, content: match[2] };
 }
 
-export function FileUpload({ defaultCategory, onComplete }: FileUploadProps) {
+export function FileUpload({ defaultCategory, onComplete, onImport }: FileUploadProps) {
   const [files, setFiles] = useState<ParsedFile[]>([]);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -95,24 +97,28 @@ export function FileUpload({ defaultCategory, onComplete }: FileUploadProps) {
     [processFiles]
   );
 
-  const handleImportAll = () => {
-    files.forEach((f) => {
-      if (f.status === "done") return;
-      const post: Post = {
-        id: generateId(),
-        title: f.title,
-        slug: generateSlug(f.title),
-        excerpt: f.content.substring(0, 120).replace(/[#*\n]/g, "").trim(),
-        content: f.content,
-        category: f.category,
-        tags: f.tags,
-        published: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        author: "Admin",
-      };
-      savePost(post);
-    });
+  const handleImportAll = async () => {
+    const pending = files.filter((f) => f.status === "pending");
+    const posts: Post[] = pending.map((f) => ({
+      id: generateId(),
+      title: f.title,
+      slug: generateSlug(f.title) + "-" + Date.now().toString(36),
+      excerpt: f.content.substring(0, 120).replace(/[#*\n]/g, "").trim(),
+      content: f.content,
+      category: f.category,
+      tags: f.tags,
+      published: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      author: "Admin",
+    }));
+
+    if (onImport) {
+      await onImport(posts);
+    } else {
+      posts.forEach((post) => savePost(post));
+    }
+
     setFiles((prev) => prev.map((f) => ({ ...f, status: "done" as const })));
     onComplete();
   };

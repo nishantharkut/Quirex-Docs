@@ -246,6 +246,30 @@ export default function AdminPage() {
     refreshCats();
   };
 
+  const handleImportPosts = async (posts: Post[]) => {
+    if (!user) return;
+    let imported = 0;
+    for (const post of posts) {
+      const { error } = await supabase.from("posts").insert({
+        title: post.title,
+        slug: post.slug,
+        content: post.content,
+        excerpt: post.excerpt,
+        category: post.category,
+        tags: post.tags,
+        published: false,
+        user_id: user.id,
+      });
+      if (error) {
+        toast.error(`Failed to import "${post.title}": ${error.message}`);
+      } else {
+        imported++;
+      }
+    }
+    await fetchPosts();
+    if (imported > 0) toast.success(`Imported ${imported} post${imported > 1 ? "s" : ""}`);
+  };
+
   if (editingPost) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -443,7 +467,7 @@ export default function AdminPage() {
                 </button>
               </div>
             </div>
-            <FileUpload defaultCategory={categories[0]?.slug || "guides"} onComplete={fetchPosts} />
+            <FileUpload defaultCategory={categories[0]?.slug || "guides"} onComplete={fetchPosts} onImport={handleImportPosts} />
             <div className="border border-border rounded-md divide-y divide-border">
               {posts.map((post) => (
                 <div key={post.id} className="flex items-center justify-between px-3 sm:px-4 py-3">
