@@ -131,11 +131,11 @@ export default function AdminPage() {
     setEditingPost(post);
   };
 
-  const handleSavePost = async () => {
-    if (!editingPost || !user || saving) return;
+  const handleSavePost = async (postToSave: Post | null = editingPost, keepEditorOpen = true) => {
+    if (!postToSave || !user || saving) return;
     setSaving(true);
-    const newSlug = generateSlug(editingPost.title) || editingPost.slug;
-    const updated = { ...editingPost, slug: newSlug };
+    const newSlug = generateSlug(postToSave.title) || postToSave.slug;
+    const updated = { ...postToSave, slug: newSlug };
 
     const { error } = await supabase
       .from("posts")
@@ -157,7 +157,9 @@ export default function AdminPage() {
     }
 
     saveRevision(updated);
-    setEditingPost(updated);
+    if (keepEditorOpen) {
+      setEditingPost(updated);
+    }
     await fetchPosts();
     broadcastSync({ type: "post_updated", slug: updated.slug });
     toast.success("Post saved");
@@ -237,7 +239,11 @@ export default function AdminPage() {
         <div className="border-b border-border">
           <div className="max-w-[90rem] mx-auto px-3 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2">
             <button
-              onClick={() => { handleSavePost(); setEditingPost(null); }}
+              onClick={() => {
+                const postSnapshot = editingPost;
+                setEditingPost(null);
+                void handleSavePost(postSnapshot, false);
+              }}
               className="flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Back</span>
