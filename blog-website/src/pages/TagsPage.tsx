@@ -1,18 +1,19 @@
 import { Header } from "@/components/Header";
-import { getPosts } from "@/lib/content";
+import { useBlogPosts } from "@/hooks/useBlogPosts";
 import { Link, useSearchParams } from "react-router-dom";
 import { Tag, FileText } from "lucide-react";
 import { ScrollToTop } from "@/components/ScrollToTop";
 
 export default function TagsPage() {
-  const posts = getPosts().filter((p) => p.published);
+  const { data: rawPosts = [] } = useBlogPosts();
+  const posts = rawPosts.filter((p) => p.published);
   const [searchParams] = useSearchParams();
   const activeTag = searchParams.get("tag");
 
   // Build tag → posts map
   const tagMap: Record<string, typeof posts> = {};
   posts.forEach((p) => {
-    p.tags.forEach((tag) => {
+    (p.tags || []).forEach((tag) => {
       if (!tagMap[tag]) tagMap[tag] = [];
       tagMap[tag].push(p);
     });

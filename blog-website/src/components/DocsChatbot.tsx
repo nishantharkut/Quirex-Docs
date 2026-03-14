@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Bot, User, Sparkles, Settings2 } from "lucide-react";
-import { getPosts } from "@/lib/content";
+import { supabase } from "@/integrations/supabase/client";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface Message {
@@ -20,9 +20,10 @@ function getAIProvider(): AIProvider {
   return (localStorage.getItem(BYOK_PROVIDER_KEY) as AIProvider) || "openai";
 }
 
-function searchDocs(query: string): { title: string; slug: string; snippet: string }[] {
+type DocEntry = { title: string; slug: string; content: string; tags: string[] };
+
+function searchDocs(query: string, posts: DocEntry[]): { title: string; slug: string; snippet: string }[] {
   const q = query.toLowerCase();
-  const posts = getPosts().filter((p) => p.published);
   const results: { title: string; slug: string; snippet: string; score: number }[] = [];
 
   for (const post of posts) {
@@ -51,16 +52,15 @@ function searchDocs(query: string): { title: string; slug: string; snippet: stri
   return results.sort((a, b) => b.score - a.score).slice(0, 3);
 }
 
-function buildDocsContext(): string {
-  const posts = getPosts().filter((p) => p.published);
+function buildDocsContext(posts: DocEntry[]): string {
   return posts
     .map((p) => `## ${p.title}\n${p.content.slice(0, 800)}`)
     .join("\n\n---\n\n")
     .slice(0, 6000);
 }
 
-function generateLocalResponse(query: string): string {
-  const results = searchDocs(query);
+function generateLocalResponse(query: string, posts: DocEntry[]): string {
+  const results = searchDocs(query, posts);
   if (results.length === 0) {
     return "I couldn't find anything matching your question in the docs. Try rephrasing or check the sidebar for available topics.";
   }
@@ -72,10 +72,10 @@ function generateLocalResponse(query: string): string {
   return response;
 }
 
-async function generateAIResponse(query: string, history: Message[]): Promise<string> {
+async function generateAIResponse(query: string, history: Message[], docsPosts: DocEntry[]): Promise<string> {
   const apiKey = getAIKey();
   const provider = getAIProvider();
-  const docsContext = buildDocsContext();
+  const docsContext = buildDocsContext(docsPosts);
 
   const systemPrompt = `You are a helpful documentation assistant for Quirex. Answer questions based on the following documentation content. Be concise and link to relevant pages using markdown links like [Page Title](/docs/slug). If you're unsure, say so.\n\nDocumentation:\n${docsContext}`;
 
@@ -122,7 +122,7 @@ async function generateAIResponse(query: string, history: Message[]): Promise<st
       return data.content[0].text;
     }
   } catch (e: any) {
-    return `⚠️ AI request failed: ${e.message}\n\nFalling back to local search:\n\n${generateLocalResponse(query)}`;
+    return `⚠️ AI request failed: ${e.message}\n\nFalling back to local search:\n\n${generateLocalResponse(query, [])}`;
   }
 }
 
@@ -134,8 +134,29 @@ export function DocsChatbot() {
   const [showSettings, setShowSettings] = useState(false);
   const [aiKey, setAiKey] = useState(getAIKey);
   const [aiProvider, setAiProvider] = useState<AIProvider>(getAIProvider);
+  const [docsPosts, setDocsPosts] = useState<DocEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch published posts from Supabase once on mount
+  useEffect(() => {
+    supabase
+      .from("posts")
+      .select("title, slug, content, tags")
+      .eq("published", true)
+      .then(({ data }) => {
+        if (data) {
+          setDocsPosts(
+            data.map((p) => ({
+              title: p.title,
+              slug: p.slug,
+              content: p.content || "",
+              tags: p.tags || [],
+            }))
+          );
+        }
+      });
+  }, []);
 
   useEffect(() => {
     if (open && inputRef.current) inputRef.current.focus();
@@ -164,10 +185,10 @@ export function DocsChatbot() {
     let response: string;
 
     if (hasKey) {
-      response = await generateAIResponse(userMsg.content, messages);
+      response = await generateAIResponse(userMsg.content, messages, docsPosts);
     } else {
       await new Promise((r) => setTimeout(r, 400 + Math.random() * 300));
-      response = generateLocalResponse(userMsg.content);
+      response = generateLocalResponse(userMsg.content, docsPosts);
     }
 
     setMessages((prev) => [...prev, { role: "assistant", content: response }]);

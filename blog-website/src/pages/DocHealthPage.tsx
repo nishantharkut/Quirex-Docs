@@ -1,5 +1,5 @@
 import { Header } from "@/components/Header";
-import { getPosts } from "@/lib/content";
+import { useBlogPosts } from "@/hooks/useBlogPosts";
 import { getAnalytics } from "@/lib/analytics";
 import { scoreDoc, getHealthLabel, getHealthBg, DocHealthScore } from "@/lib/docHealth";
 import { Link } from "react-router-dom";
@@ -11,9 +11,10 @@ type SortBy = "overall" | "freshness" | "completeness" | "quality";
 export default function DocHealthPage() {
   const [sortBy, setSortBy] = useState<SortBy>("overall");
   const [showIssuesOnly, setShowIssuesOnly] = useState(false);
+  const { data: rawPosts = [] } = useBlogPosts();
 
   const scores = useMemo(() => {
-    const posts = getPosts().filter((p) => p.published);
+    const posts = rawPosts.filter((p) => p.published);
     const analytics = getAnalytics();
     const feedback = (() => {
       try {
@@ -24,11 +25,25 @@ export default function DocHealthPage() {
     })();
 
     return posts.map((post) => {
+      // Map Supabase BlogPost fields to the shape scoreDoc expects
+      const adapted = {
+        id: post.id,
+        title: post.title,
+        slug: post.slug,
+        excerpt: post.excerpt || "",
+        content: post.content || "",
+        category: post.category || "general",
+        tags: post.tags || [],
+        published: post.published ?? true,
+        createdAt: post.created_at,
+        updatedAt: post.updated_at,
+        author: post.author_name || "",
+      };
       const viewCount = analytics.pageViews.filter((v) => v.slug === post.slug).length;
       const hasFeedback = !!feedback[post.slug];
-      return scoreDoc(post, viewCount, hasFeedback);
+      return scoreDoc(adapted, viewCount, hasFeedback);
     });
-  }, []);
+  }, [rawPosts]);
 
   const sorted = useMemo(() => {
     let items = [...scores];

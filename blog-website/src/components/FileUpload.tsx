@@ -55,6 +55,7 @@ function parseFrontmatter(raw: string): { meta: Record<string, any>; content: st
 export function FileUpload({ defaultCategory, onComplete, onImport }: FileUploadProps) {
   const [files, setFiles] = useState<ParsedFile[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [publishOnImport, setPublishOnImport] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const processFiles = useCallback(
@@ -107,7 +108,7 @@ export function FileUpload({ defaultCategory, onComplete, onImport }: FileUpload
       content: f.content,
       category: f.category,
       tags: f.tags,
-      published: false,
+      published: publishOnImport,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       author: "Admin",
@@ -182,12 +183,23 @@ export function FileUpload({ defaultCategory, onComplete, onImport }: FileUpload
             ))}
           </div>
           {files.some((f) => f.status === "pending") && (
-            <button
-              onClick={handleImportAll}
-              className="mt-2 flex items-center gap-1.5 px-3 py-1.5 text-[12px] rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium"
-            >
-              Import {files.filter((f) => f.status === "pending").length} file{files.filter((f) => f.status === "pending").length > 1 ? "s" : ""}
-            </button>
+            <div className="mt-2 flex items-center gap-3 flex-wrap">
+              <button
+                onClick={handleImportAll}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium"
+              >
+                Import {files.filter((f) => f.status === "pending").length} file{files.filter((f) => f.status === "pending").length > 1 ? "s" : ""}
+              </button>
+              <label className="flex items-center gap-1.5 text-[12px] text-muted-foreground cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={publishOnImport}
+                  onChange={(e) => setPublishOnImport(e.target.checked)}
+                  className="w-3.5 h-3.5 accent-primary"
+                />
+                Publish immediately
+              </label>
+            </div>
           )}
         </div>
       )}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { getCategories, saveCategory, deleteCategory, generateSlug, generateId } from "@/lib/content";
@@ -55,6 +56,7 @@ function dbToLocal(p: DbPost): Post {
 }
 
 export default function AdminPage() {
+  const queryClient = useQueryClient();
   const { user, isAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState<Tab>("posts");
@@ -267,6 +269,7 @@ export default function AdminPage() {
       }
     }
     await fetchPosts();
+    queryClient.invalidateQueries({ queryKey: ["blog-posts"] });
     if (imported > 0) toast.success(`Imported ${imported} post${imported > 1 ? "s" : ""}`);
   };
 
