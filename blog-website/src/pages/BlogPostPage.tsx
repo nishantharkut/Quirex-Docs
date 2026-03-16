@@ -7,12 +7,26 @@ import { ShareButtons } from "@/components/ShareButtons";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useAuth } from "@/hooks/useAuth";
+import { useState, useCallback, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { MarkdownEditor } from "@/components/MarkdownEditor";
+import { toast } from "sonner";
 import { siteConfig } from "@/lib/siteConfig";
-import { Calendar, Clock, ArrowLeft, User } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, User, Edit2, Save, Eye, Check, X, ShieldOff, ShieldAlert, MonitorUp } from "lucide-react";
 
 export default function BlogPostPage() {
+  const { user } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLocalMode, setIsLocalMode] = useState(false);
   const { slug } = useParams<{ slug: string }>();
-  const { data: post, isLoading } = useBlogPost(slug || "");
+  const { data: post, isLoading, refetch } = useBlogPost(slug || "");
+
+  useEffect(() => {
+    if (post) setEditedContent(post.content || "");
+  }, [post]);
 
   usePageMeta({
     title: post?.title || "Blog",
@@ -22,7 +36,67 @@ export default function BlogPostPage() {
   });
 
   if (isLoading) {
-    return (
+    
+  const isAuthor = user?.id === post?.user_id;
+
+  const handleSave = async () => {
+    if (!post || !user) return;
+    setIsSaving(true);
+    const { error } = await supabase
+      .from("posts")
+      .update({ content: editedContent })
+      .eq("id", post.id);
+
+    setIsSaving(false);
+    if (error) {
+      toast.error("Failed to save changes.");
+    } else {
+      toast.success("Post updated!");
+      refetch();
+      setIsEditing(false);
+    }
+  };
+
+  const togglePublished = async () => {
+    if (!post) return;
+    const newStatus = !post.published;
+    const { error } = await supabase
+      .from("posts")
+      .update({ published: newStatus })
+      .eq("id", post.id);
+    if (error) {
+      toast.error("Failed to update status.");
+    } else {
+      toast.success(newStatus ? "Post is now Public" : "Post is now Private");
+      refetch();
+    }
+  };
+
+    const exportToFile = async () => {
+    if ((window as any).electronAPI) {
+      const success = await (window as any).electronAPI.saveLocalFile(editedContent || post?.content || "", post?.title || "untitled");
+      if (success) {
+        toast.success("Saved to local file system!");
+        (window as any).electronAPI.showNotification("Success", "Blog post successfully saved to disk.");
+      }
+    } else {
+      toast.info("Native file access requires the desktop app");
+    }
+  };
+
+  const importFromFile = async () => {
+    if ((window as any).electronAPI) {
+      const fileContent = await (window as any).electronAPI.openLocalFile();
+      if (fileContent) {
+        setEditedContent(fileContent);
+        toast.success("Loaded from local file!");
+      }
+    } else {
+      toast.info("Native file access requires the desktop app");
+    }
+  };
+
+  return (
       <div className="min-h-screen bg-background">
         <Header />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
@@ -64,6 +138,56 @@ export default function BlogPostPage() {
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to blog
         </Link>
+        <div className="flex-1" />
+        
+        {/* Author Toolbar */}
+        {isAuthor && (
+          <div className="flex flex-wrap items-center gap-2 p-3 mb-6 bg-muted/30 border border-border rounded-lg">
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-background border border-border hover:bg-muted"
+            >
+              {isEditing ? <Eye className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+              {isEditing ? "View Mode" : "Edit Mode"}
+            </button>
+            <button
+              onClick={togglePublished}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-background border border-border hover:bg-muted"
+            >
+              {post.published ? (
+                <><Eye className="w-4 h-4 text-green-500" /> Public</>
+              ) : (
+                <><ShieldAlert className="w-4 h-4 text-orange-500" /> Private Draft</>
+              )}
+            </button>
+            
+            {isEditing && (
+              <>
+                <button
+                  onClick={importFromFile}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-background border border-border hover:bg-muted ml-auto"
+                >
+                  <MonitorUp className="w-4 h-4" /> Import Local
+                </button>
+                <button
+                  onClick={exportToFile}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-background border border-border hover:bg-muted"
+                >
+                  <Save className="w-4 h-4" /> Export Local
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSaving ? "Saving..." : "Save to Cloud"}
+                </button>
+              </>
+            )}
+
+          </div>
+        )}
 
         {/* Cover image */}
         {post.cover_image_url && (
@@ -131,8 +255,17 @@ export default function BlogPostPage() {
         </div>
 
         {/* Content */}
-        <div className="prose-lg">
-          <MarkdownRenderer content={post.content || ""} />
+        <div className="prose-lg w-full max-w-none">
+          {isEditing ? (
+            <div className="border border-border rounded-xl mt-4 overflow-hidden h-[600px] sm:h-[800px] mb-8">
+              <MarkdownEditor
+                value={editedContent}
+                onChange={setEditedContent}
+              />
+            </div>
+          ) : (
+            <MarkdownRenderer content={post.content || ""} />
+          )}
         </div>
 
         {/* Tags */}

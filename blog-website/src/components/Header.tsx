@@ -40,7 +40,7 @@ export function Header() {
         <div className="max-w-[90rem] mx-auto px-3 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-6 min-w-0">
             <Link to="/" className="flex items-center gap-2 shrink-0">
-              <img src="/favicon.png" alt="Quirex" className="w-8 h-8 sm:w-6 sm:h-6" />
+              <img src="/favicon.svg" alt="Quirex" className="w-8 h-8 sm:w-6 sm:h-6" />
               <span className="hidden sm:inline text-[15px] font-semibold tracking-[-0.01em] text-foreground">
                 {siteConfig.name}
               </span>

@@ -25,3 +25,13 @@ dist-ssr
 
 # Private docs mounted outside product scope
 public/md-files/
+
+# Electron / Desktop app build artifacts
+dist-electron
+release
+out
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.snap
