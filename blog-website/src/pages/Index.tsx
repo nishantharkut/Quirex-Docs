@@ -265,22 +265,20 @@ greet("World");
       ════════════════════════════════════════════ */}
       <section className="relative overflow-hidden">
         {/* Grid background */}
+        {/* Mesh background */}
         <div
           ref={heroGridRef}
-          className="absolute inset-0 opacity-[0.06] dark:opacity-[0.1]"
+          className="absolute inset-0 z-0 pointer-events-none"
           style={{
-            backgroundImage: `linear-gradient(hsl(var(--foreground)) 0.5px, transparent 0.5px), linear-gradient(90deg, hsl(var(--foreground)) 0.5px, transparent 0.5px)`,
-            backgroundSize: "48px 48px",
+            backgroundImage: `
+              linear-gradient(to right, hsl(var(--foreground) / 0.05) 1px, transparent 1px),
+              linear-gradient(to bottom, hsl(var(--foreground) / 0.05) 1px, transparent 1px)
+            `,
+            backgroundSize: "40px 40px",
+            maskImage: "radial-gradient(ellipse 80% 80% at 50% 20%, black 20%, transparent 100%)",
+            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 20%, black 20%, transparent 100%)"
           }}
         />
-        {/* Radial fade mask over grid */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(ellipse 70% 60% at 50% 40%, transparent 30%, hsl(var(--background)) 100%)`,
-          }}
-        />
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
         <div
           ref={heroRef}
@@ -400,9 +398,9 @@ greet("World");
       {/* ════════════════════════════════════════════
           STATS BAR
       ════════════════════════════════════════════ */}
-      <section ref={statsRef} className="border-y border-border bg-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-px">
+      <section ref={statsRef} className="border-y border-border bg-background">
+          <div className="max-w-6xl mx-auto px-4 sm:px-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-border">
             {stats.map((s, i) => (
               <div
                 key={s.label}
