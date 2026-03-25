@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { siteConfig } from "@/lib/siteConfig";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -19,7 +22,7 @@ interface DashboardPost {
 }
 
 
-import { Clock, ArrowRight, PenLine, Eye, ShieldAlert, Key } from "lucide-react";
+import { Clock, ArrowRight, PenLine, Eye, ShieldAlert, Globe, FileText, EyeOff, Settings, BarChart3 } from "lucide-react";
 
 function DashboardPostCard({ post }: { post: any }) {
   const readTime = Math.max(1, Math.ceil((post.content || "").split(/\s+/).length / 200));
@@ -88,11 +91,37 @@ function DashboardPostCard({ post }: { post: any }) {
 
 
 export default function DashboardPage() {
-  const { user, profile, isAdmin, isEditor } = useAuth();
+  const { user, profile, isAdmin, refreshProfile } = useAuth();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<DashboardPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "published" | "drafts">("all");
+  const [blogVisibilitySaving, setBlogVisibilitySaving] = useState(false);
+
+  const blogListedPublicly = profile?.blog_public !== false;
+
+  const handleBlogVisibilityChange = async (checked: boolean) => {
+    if (!user) return;
+    setBlogVisibilitySaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ blog_public: checked })
+      .eq("user_id", user.id);
+    setBlogVisibilitySaving(false);
+    if (error) {
+      toast.error("Could not update blog visibility.");
+      return;
+    }
+    await refreshProfile();
+    queryClient.invalidateQueries({ queryKey: ["blog-posts"] });
+    queryClient.invalidateQueries({ queryKey: ["blog-post"] });
+    toast.success(
+      checked
+        ? "Your posts can appear on the public blog again."
+        : "Your posts are now hidden from the public blog."
+    );
+  };
 
   const fetchPosts = useCallback(async () => {
     if (!user) return;
@@ -191,6 +220,28 @@ export default function DashboardPage() {
               <span className="text-[12px] font-medium">Drafts</span>
             </div>
             <p className="text-[1.5rem] font-bold text-foreground tabular-nums">{drafts.length}</p>
+          </div>
+        </div>
+
+        {/* Global blog visibility — persisted in profiles.blog_public */}
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-foreground font-medium text-[14px] mb-1">
+                <Globe className="w-4 h-4 text-primary shrink-0" />
+                Show my posts on the public blog
+              </div>
+              <p className="text-[12px] text-muted-foreground max-w-xl leading-relaxed">
+                Turn this off to hide all your published posts from the blog page, home page, and search.
+                You can still edit them here; only you can open them by link while this is off.
+              </p>
+            </div>
+            <Switch
+              className="shrink-0 sm:mt-0.5"
+              checked={blogListedPublicly}
+              disabled={blogVisibilitySaving || !user}
+              onCheckedChange={handleBlogVisibilityChange}
+            />
           </div>
         </div>
 

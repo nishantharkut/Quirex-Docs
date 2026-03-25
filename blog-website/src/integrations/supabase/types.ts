@@ -61,6 +61,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          blog_public: boolean
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -72,6 +73,7 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          blog_public?: boolean
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -83,6 +85,7 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          blog_public?: boolean
           avatar_url?: string | null
           bio?: string | null
           created_at?: string

@@ -31,16 +31,23 @@ async function fetchPublishedPosts(): Promise<BlogPost[]> {
 
   // Fetch author profiles for all unique user_ids
   const userIds = [...new Set(posts.map((p) => p.user_id))];
-  const { data: profiles } = await supabase
+  const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("user_id, display_name, avatar_url")
+    .select("user_id, display_name, avatar_url, blog_public")
     .in("user_id", userIds);
+
+  if (profilesError) throw profilesError;
 
   const profileMap = new Map(
     (profiles || []).map((p) => [p.user_id, p])
   );
 
-  return posts.map((post) => {
+  const visible = posts.filter((post) => {
+    const profile = profileMap.get(post.user_id);
+    return profile?.blog_public !== false;
+  });
+
+  return visible.map((post) => {
     const profile = profileMap.get(post.user_id);
     return {
       ...post,
@@ -59,11 +66,23 @@ async function fetchPostBySlug(slug: string): Promise<BlogPost | null> {
 
   if (error || !post) return null;
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url")
+    .select("display_name, avatar_url, blog_public")
     .eq("user_id", post.user_id)
     .maybeSingle();
+
+  const { data: authData } = await supabase.auth.getUser();
+  const isPostAuthor = authData.user?.id === post.user_id;
+  if (post.published !== true && !isPostAuthor) {
+    return null;
+  }
+  if (profileError && !isPostAuthor) {
+    return null;
+  }
+  if (profile?.blog_public === false && !isPostAuthor) {
+    return null;
+  }
 
   return {
     ...post,

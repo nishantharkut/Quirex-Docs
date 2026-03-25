@@ -3,7 +3,7 @@
 
 import type { Category, Post } from "../types/blog";
 
-export const importedSeedVersion = "126f465b4cfaf361be357c89189b1fc404290480";
+export const importedSeedVersion = "80db934425fac1e612ad6de1f24cbdb60f6ed967";
 
 export const importedCategories: Category[] = [
   {
@@ -24,8 +24,8 @@ export const importedPosts: Post[] = [
     "category": "general",
     "tags": [],
     "published": true,
-    "createdAt": "2026-03-07T18:10:43.511Z",
-    "updatedAt": "2026-03-07T18:10:43.511Z",
+    "createdAt": "2026-03-25T16:45:22.362Z",
+    "updatedAt": "2026-03-25T16:45:22.362Z",
     "author": "Admin"
   }
 ];

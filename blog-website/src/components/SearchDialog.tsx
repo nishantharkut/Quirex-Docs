@@ -75,11 +75,37 @@ export function SearchDialog() {
       document.body.style.overflow = "hidden";
       supabase
         .from("posts")
-        .select("id, title, slug, excerpt, category")
+        .select("id, title, slug, excerpt, category, user_id")
         .eq("published", true)
         .order("created_at", { ascending: false })
-        .then(({ data }) => {
-          if (data) setAllPosts(data);
+        .then(async ({ data: raw, error: postsError }) => {
+          if (postsError) {
+            setAllPosts([]);
+            return;
+          }
+          if (!raw?.length) {
+            setAllPosts([]);
+            return;
+          }
+          const userIds = [...new Set(raw.map((p) => p.user_id))];
+          const { data: profiles, error: profilesError } = await supabase
+            .from("profiles")
+            .select("user_id, blog_public")
+            .in("user_id", userIds);
+          if (profilesError) {
+            setAllPosts([]);
+            return;
+          }
+          const hiddenAuthors = new Set(
+            (profiles || []).filter((pr) => pr.blog_public === false).map((pr) => pr.user_id)
+          );
+          const visible = raw
+            .filter((p) => !hiddenAuthors.has(p.user_id))
+            .map(({ id, title, slug, excerpt, category }) => ({ id, title, slug, excerpt, category }));
+          setAllPosts(visible);
+        })
+        .catch(() => {
+          setAllPosts([]);
         });
     } else {
       document.body.style.overflow = "";

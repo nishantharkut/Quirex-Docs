@@ -138,23 +138,46 @@ export function DocsChatbot() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch published posts from Supabase once on mount
+  // Fetch published posts once on mount (respect profiles.blog_public like blog index / search)
   useEffect(() => {
     supabase
       .from("posts")
-      .select("title, slug, content, tags")
+      .select("title, slug, content, tags, user_id")
       .eq("published", true)
-      .then(({ data }) => {
-        if (data) {
-          setDocsPosts(
-            data.map((p) => ({
+      .then(async ({ data: raw, error: postsError }) => {
+        if (postsError) {
+          setDocsPosts([]);
+          return;
+        }
+        if (!raw?.length) {
+          setDocsPosts([]);
+          return;
+        }
+        const userIds = [...new Set(raw.map((p) => p.user_id))];
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("user_id, blog_public")
+          .in("user_id", userIds);
+        if (profilesError) {
+          setDocsPosts([]);
+          return;
+        }
+        const hiddenAuthors = new Set(
+          (profiles || []).filter((pr) => pr.blog_public === false).map((pr) => pr.user_id)
+        );
+        setDocsPosts(
+          raw
+            .filter((p) => !hiddenAuthors.has(p.user_id))
+            .map((p) => ({
               title: p.title,
               slug: p.slug,
               content: p.content || "",
               tags: p.tags || [],
             }))
-          );
-        }
+        );
+      })
+      .catch(() => {
+        setDocsPosts([]);
       });
   }, []);
 

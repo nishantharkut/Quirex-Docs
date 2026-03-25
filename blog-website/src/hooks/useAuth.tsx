@@ -10,6 +10,8 @@ interface Profile {
   display_name: string | null;
   avatar_url: string | null;
   email: string | null;
+  /** When false, this user's posts are hidden from public blog surfaces. Absent/undefined treated as public. */
+  blog_public?: boolean;
 }
 
 interface AuthContextType {
@@ -26,6 +28,7 @@ interface AuthContextType {
   hasRole: (role: AppRole) => boolean;
   isAdmin: boolean;
   isEditor: boolean;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -129,12 +132,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = hasRole("admin");
   const isEditor = hasRole("editor") || isAdmin;
 
+  const refreshProfile = useCallback(async () => {
+    if (!user) return;
+    await fetchProfile(user.id);
+  }, [user, fetchProfile]);
+
   return (
     <AuthContext.Provider
       value={{
         session, user, profile, roles, loading,
         signIn, signUp, signInWithGoogle, signInWithMagicLink, signOut,
-        hasRole, isAdmin, isEditor,
+        hasRole, isAdmin, isEditor, refreshProfile,
       }}
     >
       {children}
