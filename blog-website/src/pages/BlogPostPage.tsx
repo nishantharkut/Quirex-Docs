@@ -36,8 +36,33 @@ export default function BlogPostPage() {
   });
 
   if (isLoading) {
-    
-  const isAuthor = user?.id === post?.user_id;
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+          <ContentSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center py-32 text-center px-4">
+          <div>
+            <p className="text-[15px] text-muted-foreground mb-2">Post not found</p>
+            <Link to="/blog" className="text-[13px] text-primary hover:underline">
+              ← Back to blog
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isAuthor = user?.id === post.user_id;
 
   const handleSave = async () => {
     if (!post || !user) return;
@@ -72,9 +97,9 @@ export default function BlogPostPage() {
     }
   };
 
-    const exportToFile = async () => {
+  const exportToFile = async () => {
     if ((window as any).electronAPI) {
-      const success = await (window as any).electronAPI.saveLocalFile(editedContent || post?.content || "", post?.title || "untitled");
+      const success = await (window as any).electronAPI.saveLocalFile(editedContent || post.content || "", post.title || "untitled");
       if (success) {
         toast.success("Saved to local file system!");
         (window as any).electronAPI.showNotification("Success", "Blog post successfully saved to disk.");
@@ -95,32 +120,6 @@ export default function BlogPostPage() {
       toast.info("Native file access requires the desktop app");
     }
   };
-
-  return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-          <ContentSkeleton />
-        </div>
-      </div>
-    );
-  }
-
-  if (!post) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex items-center justify-center py-32 text-center px-4">
-          <div>
-            <p className="text-[15px] text-muted-foreground mb-2">Post not found</p>
-            <Link to="/blog" className="text-[13px] text-primary hover:underline">
-              ← Back to blog
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const readTime = Math.max(1, Math.ceil((post.content || "").split(/\s+/).length / 200));
 
