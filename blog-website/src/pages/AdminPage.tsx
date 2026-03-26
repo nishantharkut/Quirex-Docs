@@ -178,7 +178,12 @@ export default function AdminPage() {
       setEditingPost(updated);
     }
     await fetchPosts();
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["blog-posts"] }),
+      queryClient.invalidateQueries({ queryKey: ["blog-post"] }),
+    ]);
     broadcastSync({ type: "post_updated", slug: updated.slug });
+    broadcastSync({ type: "content_refresh" });
     toast.success("Post saved");
   };
 
@@ -231,7 +236,12 @@ export default function AdminPage() {
     }
     if (editingPost?.id === id) setEditingPost(null);
     await fetchPosts();
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["blog-posts"] }),
+      queryClient.invalidateQueries({ queryKey: ["blog-post"] }),
+    ]);
     if (post) broadcastSync({ type: "post_deleted", slug: post.slug });
+    broadcastSync({ type: "content_refresh" });
     toast.success("Post deleted");
   };
 

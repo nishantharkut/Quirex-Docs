@@ -4,6 +4,7 @@ import { Search, X, Clock, Trash2 } from "lucide-react";
 import { trackSearch } from "@/lib/analytics";
 import { useI18n, t } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchPublicProfiles, isProfilePublic } from "@/lib/blogVisibility";
 
 interface SearchResult {
   id: string;
@@ -88,16 +89,15 @@ export function SearchDialog() {
             return;
           }
           const userIds = [...new Set(raw.map((p) => p.user_id))];
-          const { data: profiles, error: profilesError } = await supabase
-            .from("profiles")
-            .select("user_id, blog_public")
-            .in("user_id", userIds);
-          if (profilesError) {
+          let profiles;
+          try {
+            profiles = await fetchPublicProfiles(userIds);
+          } catch {
             setAllPosts([]);
             return;
           }
           const hiddenAuthors = new Set(
-            (profiles || []).filter((pr) => pr.blog_public === false).map((pr) => pr.user_id)
+            (profiles || []).filter((pr) => !isProfilePublic(pr)).map((pr) => pr.user_id)
           );
           const visible = raw
             .filter((p) => !hiddenAuthors.has(p.user_id))

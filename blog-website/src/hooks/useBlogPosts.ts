@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchPublicProfile, fetchPublicProfiles, isProfilePublic } from "@/lib/blogVisibility";
 
 export interface BlogPost {
   id: string;
@@ -31,12 +32,7 @@ async function fetchPublishedPosts(): Promise<BlogPost[]> {
 
   // Fetch author profiles for all unique user_ids
   const userIds = [...new Set(posts.map((p) => p.user_id))];
-  const { data: profiles, error: profilesError } = await supabase
-    .from("profiles")
-    .select("user_id, display_name, avatar_url, blog_public")
-    .in("user_id", userIds);
-
-  if (profilesError) throw profilesError;
+  const profiles = await fetchPublicProfiles(userIds);
 
   const profileMap = new Map(
     (profiles || []).map((p) => [p.user_id, p])
@@ -44,7 +40,7 @@ async function fetchPublishedPosts(): Promise<BlogPost[]> {
 
   const visible = posts.filter((post) => {
     const profile = profileMap.get(post.user_id);
-    return profile?.blog_public !== false;
+    return isProfilePublic(profile);
   });
 
   return visible.map((post) => {
@@ -66,11 +62,13 @@ async function fetchPostBySlug(slug: string): Promise<BlogPost | null> {
 
   if (error || !post) return null;
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("display_name, avatar_url, blog_public")
-    .eq("user_id", post.user_id)
-    .maybeSingle();
+  let profile = null;
+  let profileError = null;
+  try {
+    profile = await fetchPublicProfile(post.user_id);
+  } catch (error) {
+    profileError = error;
+  }
 
   const { data: authData } = await supabase.auth.getUser();
   const isPostAuthor = authData.user?.id === post.user_id;
@@ -80,7 +78,7 @@ async function fetchPostBySlug(slug: string): Promise<BlogPost | null> {
   if (profileError && !isPostAuthor) {
     return null;
   }
-  if (profile?.blog_public === false && !isPostAuthor) {
+  if (!isProfilePublic(profile) && !isPostAuthor) {
     return null;
   }
 

@@ -110,7 +110,11 @@ export default function DashboardPage() {
       .eq("user_id", user.id);
     setBlogVisibilitySaving(false);
     if (error) {
-      toast.error("Could not update blog visibility.");
+      toast.error(
+        error.message?.toLowerCase().includes("blog_public")
+          ? "Run the Supabase blog visibility migration before using this toggle."
+          : "Could not update blog visibility."
+      );
       return;
     }
     await refreshProfile();

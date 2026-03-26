@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useBlogPost, useBlogPosts, BlogPost } from "@/hooks/useBlogPosts";
 import { Header } from "@/components/Header";
 import { Sidebar, MobileSidebar } from "@/components/Sidebar";
@@ -32,7 +33,7 @@ export default function PostPage() {
   const { slug } = useParams<{ slug: string }>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileActions, setMobileActions] = useState(false);
-  const [, forceUpdate] = useState(0);
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { language } = useI18n();
 
@@ -79,11 +80,14 @@ export default function PostPage() {
   useEffect(() => {
     const unsub = onSync((event) => {
       if ((event.type === "post_updated" && event.slug === slug) || event.type === "content_refresh") {
-        forceUpdate((n) => n + 1);
+        void Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["blog-posts"] }),
+          queryClient.invalidateQueries({ queryKey: ["blog-post"] }),
+        ]);
       }
     });
     return unsub;
-  }, [slug]);
+  }, [queryClient, slug]);
 
   // OG meta
   usePageMeta({

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Bot, User, Sparkles, Settings2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { fetchPublicProfiles, isProfilePublic } from "@/lib/blogVisibility";
 
 interface Message {
   role: "user" | "assistant";
@@ -154,16 +155,15 @@ export function DocsChatbot() {
           return;
         }
         const userIds = [...new Set(raw.map((p) => p.user_id))];
-        const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
-          .select("user_id, blog_public")
-          .in("user_id", userIds);
-        if (profilesError) {
+        let profiles;
+        try {
+          profiles = await fetchPublicProfiles(userIds);
+        } catch {
           setDocsPosts([]);
           return;
         }
         const hiddenAuthors = new Set(
-          (profiles || []).filter((pr) => pr.blog_public === false).map((pr) => pr.user_id)
+          (profiles || []).filter((pr) => !isProfilePublic(pr)).map((pr) => pr.user_id)
         );
         setDocsPosts(
           raw

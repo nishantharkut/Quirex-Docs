@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useBlogPosts, BlogPost } from "@/hooks/useBlogPosts";
 import { Header } from "@/components/Header";
@@ -6,6 +7,7 @@ import { Calendar, Clock, User, ArrowRight, PenLine } from "lucide-react";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { onSync } from "@/lib/syncChannel";
 
 function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
   const readTime = Math.max(1, Math.ceil((post.content || "").split(/\s+/).length / 200));
@@ -118,8 +120,9 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
 }
 
 export default function BlogPage() {
+  const queryClient = useQueryClient();
   const { data: posts, isLoading } = useBlogPosts();
-  const { user, isEditor } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     document.title = `Blog — ${siteConfig.name}`;
@@ -127,6 +130,20 @@ export default function BlogPage() {
       document.title = siteConfig.metaTitle;
     };
   }, []);
+
+  useEffect(() => {
+    const unsub = onSync((event) => {
+      if (
+        event.type === "post_updated" ||
+        event.type === "post_deleted" ||
+        event.type === "post_published" ||
+        event.type === "content_refresh"
+      ) {
+        void queryClient.invalidateQueries({ queryKey: ["blog-posts"] });
+      }
+    });
+    return unsub;
+  }, [queryClient]);
 
   return (
     <div className="min-h-screen bg-background">
