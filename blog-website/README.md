@@ -1,11 +1,11 @@
-# Inkwell — Open Source Documentation Platform
+# Quirex Docs — Open Source Documentation Platform
 
 A beautiful, self-hostable documentation platform built with React, Vite, and TypeScript. No backend required by default — everything runs client-side with localStorage.
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/your-repo/inkwell.git
+git clone https://github.com/nishantharkut/Quirex-Docs.git
 cd inkwell
 npm install
 npm run dev

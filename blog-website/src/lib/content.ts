@@ -4,6 +4,9 @@ import { importedCategories, importedPosts, importedSeedVersion } from "@/lib/re
 const POSTS_KEY = "quirex_posts";
 const CATEGORIES_KEY = "quirex_categories";
 const SEED_VERSION_KEY = "quirex_seed_version";
+/** Bump when defaultPosts bodies change so localStorage re-merges from seed */
+const DEFAULT_POSTS_VERSION_KEY = "quirex_default_posts_version";
+const DEFAULT_POSTS_VERSION = "nova-docs-2026-04";
 
 const defaultCategories: Category[] = [
   { id: "getting-started", name: "Getting Started", slug: "getting-started", order: 0 },
@@ -17,52 +20,50 @@ const defaultPosts: Post[] = [
     id: "welcome",
     title: "Welcome to Quirex",
     slug: "welcome",
-    excerpt: "Get started with Quirex — a modern documentation platform with powerful editing, versioning, and multi-language support.",
+    excerpt: "Get started with Quirex — an open-source documentation and publishing platform.",
     content: `# Welcome to Quirex
 
-Quirex is a **modern documentation platform** designed to make your content shine. Write in Markdown, publish beautiful docs, and manage everything from a powerful admin panel.
+Quirex is an open-source documentation and publishing platform. Write in Markdown, publish to the web, manage content from a built-in admin panel.
 
-## What Makes Quirex Different?
+## Overview
 
-- 🚀 **Zero Configuration** — Start writing immediately, no build steps required
-- 📝 **Rich Markdown Editor** — Formatting toolbar, keyboard shortcuts, auto-save
-- 🔍 **Instant Search** — Press \`⌘K\` to find anything across all your docs
-- 🌍 **Multi-Language** — Built-in i18n with 8 languages supported
-- 📱 **Mobile-First** — Swipe gestures, responsive design, PWA support
-- 🔐 **Role-Based Access** — Admin, editor, and viewer roles with secure auth
+- **No build step required** — start writing, hit publish
+- **Markdown-native editor** — formatting toolbar, keyboard shortcuts, 30-second auto-save
+- **Command palette search** — press \`Cmd+K\` to find anything
+- **Light and dark themes** — system-aware, zero flash on load
+- **Mobile-ready** — swipe navigation, responsive layout, installable as a PWA
+- **Role-based access** — admin, editor, and viewer permissions
 
-## Quick Start
+## Getting started
 
-1. **Explore the docs** — Browse through the sidebar to learn about features
-2. **Try the search** — Press \`⌘K\` (or \`Ctrl+K\`) to open instant search
-3. **Switch themes** — Click the moon/sun icon in the header
-4. **Change language** — Use the language switcher to see translations
+1. Browse the sidebar to explore the documentation
+2. Press \`Cmd+K\` (or \`Ctrl+K\`) to open search
+3. Toggle the theme with the icon in the header
+4. Sign in to access the admin panel and start writing
 
-:::tip First-time users
-Sign in to access the Admin Panel where you can create and manage your own documentation.
+:::tip
+The admin panel is where you create, edit, and manage all content. Sign in to get started.
 :::
 
-## Platform Features
+## Feature summary
 
 | Feature | Description |
 |---------|-------------|
-| Markdown Editor | Rich formatting with live preview |
-| Version Control | Track changes with revision history |
-| Doc Versioning | Manage v1.0, v1.1, etc. separately |
+| Markdown editor | Toolbar, shortcuts, live preview |
+| Revision history | Up to 50 snapshots per document |
 | Authentication | Email, Google OAuth, magic links |
-| Comments | Per-page discussion threads |
-| Analytics | Track page views and engagement |
+| Comments | Threaded discussions on each page |
+| Analytics | Page views and reading engagement |
+| Export | Download as \`.md\` or print to PDF |
 
-## Code Highlighting
+## Syntax highlighting
 
-Quirex supports syntax highlighting for **100+ languages**:
+The renderer supports 100+ languages out of the box:
 
 \`\`\`typescript
-// TypeScript example
 interface DocConfig {
   title: string;
   theme: 'light' | 'dark' | 'auto';
-  version: string;
   i18n: {
     defaultLocale: string;
     locales: string[];
@@ -72,28 +73,26 @@ interface DocConfig {
 const config: DocConfig = {
   title: "My Documentation",
   theme: "auto",
-  version: "2.0",
   i18n: {
     defaultLocale: "en",
-    locales: ["en", "es", "fr", "de", "ja", "zh", "pt", "ko"]
+    locales: ["en", "es", "fr", "de"]
   }
 };
 \`\`\`
 
-## Custom Components
+## Callouts
 
-Use callout blocks to highlight important information:
+Use directive syntax to create callout blocks:
 
-:::info About Callouts
-Callouts help readers quickly identify important content. Use \`:::info\`, \`:::warning\`, \`:::tip\`, \`:::danger\`, or \`:::note\`.
+:::info About callouts
+Supported types: \`info\`, \`warning\`, \`tip\`, \`danger\`, \`note\`. They render as styled blocks inside your content.
 :::
 
-:::warning Authentication Required
-Some features like the Admin Panel require signing in. Create an account to get started.
+:::warning Authentication required
+The admin panel requires a signed-in account. Create one from the login page.
 :::
 
-:::details What's in the Admin Panel?
-The Admin Panel includes:
+:::details What does the admin panel include?
 - Post editor with formatting toolbar
 - Category and tag management
 - User role management (admin only)
@@ -103,7 +102,7 @@ The Admin Panel includes:
 
 ---
 
-Ready to dive deeper? Check out the **Markdown Guide** next, or head to the **Admin Panel** to create your first post!
+Continue to the **Markdown Guide** for a full syntax reference, or go to the admin panel to create your first post.
 `,
     category: "getting-started",
     tags: ["introduction", "setup", "overview"],
@@ -116,12 +115,12 @@ Ready to dive deeper? Check out the **Markdown Guide** next, or head to the **Ad
     id: "markdown-guide",
     title: "Markdown Guide",
     slug: "markdown-guide",
-    excerpt: "Master Markdown syntax with Quirex's extended features including callouts, collapsible sections, and syntax highlighting.",
+    excerpt: "Full Markdown syntax reference — GFM, code blocks, tables, callouts, and collapsible sections.",
     content: `# Markdown Guide
 
-Quirex uses **GitHub Flavored Markdown (GFM)** with additional custom components for documentation.
+Quirex uses GitHub Flavored Markdown (GFM) with custom extensions for documentation.
 
-## Text Formatting
+## Text formatting
 
 | Syntax | Output |
 |--------|--------|
@@ -133,20 +132,20 @@ Quirex uses **GitHub Flavored Markdown (GFM)** with additional custom components
 
 ## Headings
 
-Use \`#\` symbols to create headings. Each heading automatically gets an ID for deep linking:
+Use \`#\` symbols. Each heading gets an anchor ID for deep linking.
 
 \`\`\`markdown
 # H1 Heading
-## H2 Heading  
+## H2 Heading
 ### H3 Heading
 #### H4 Heading
 \`\`\`
 
-:::tip Hover to Copy
-Hover over any heading to see a link icon. Click it to copy the direct URL to that section.
+:::tip
+Hover any heading to reveal a link icon. Click it to copy a direct URL to that section.
 :::
 
-## Links & Images
+## Links and images
 
 \`\`\`markdown
 [Link text](https://example.com)
@@ -155,50 +154,45 @@ Hover over any heading to see a link icon. Click it to copy the direct URL to th
 
 ## Lists
 
-### Unordered Lists
+### Unordered
 - First item
 - Second item
   - Nested item
   - Another nested
 
-### Ordered Lists
+### Ordered
 1. First step
 2. Second step
 3. Third step
 
-### Task Lists
+### Task lists
 - [x] Write documentation
 - [x] Add syntax highlighting
 - [ ] Ship to production
 
-## Code Blocks
+## Code blocks
 
-Specify a language after the opening backticks for syntax highlighting:
+Specify a language after the opening backticks:
 
 \`\`\`python
-from typing import List, Optional
-
 class DocumentProcessor:
     def __init__(self, config: dict):
         self.config = config
         self.cache = {}
-    
+
     def process(self, content: str) -> dict:
-        """Process markdown content and return metadata."""
         word_count = len(content.split())
         return {
             "word_count": word_count,
             "read_time": max(1, word_count // 200),
-            "has_code": "\`\`\`" in content
         }
 \`\`\`
 
 \`\`\`javascript
-// JavaScript with modern syntax
 const fetchDocs = async (category) => {
   const response = await fetch(\`/api/docs/\${category}\`);
-  const { data, meta } = await response.json();
-  
+  const { data } = await response.json();
+
   return data.map(doc => ({
     ...doc,
     url: \`/docs/\${doc.slug}\`,
@@ -209,65 +203,55 @@ const fetchDocs = async (category) => {
 
 ## Tables
 
-\`\`\`markdown
-| Column 1 | Column 2 | Column 3 |
-|----------|----------|----------|
-| Cell 1   | Cell 2   | Cell 3   |
-\`\`\`
-
-Result:
-
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Markdown | ✅ | Full GFM support |
-| Callouts | ✅ | 5 types available |
-| Code highlighting | ✅ | 100+ languages |
-| Tables | ✅ | With alignment |
+| Markdown | Supported | Full GFM |
+| Callouts | Supported | 5 types |
+| Code highlighting | Supported | 100+ languages |
+| Tables | Supported | With alignment |
 
 ## Blockquotes
 
-> "Documentation is a love letter that you write to your future self."
+> Documentation is a love letter that you write to your future self.
 > — Damian Conway
 
-## Horizontal Rules
+## Horizontal rules
 
-Use \`---\` or \`***\` to create a horizontal rule:
+Use \`---\` or \`***\` on its own line:
 
 ---
 
-## Callout Blocks
-
-Quirex extends Markdown with custom callout blocks:
+## Callout blocks
 
 \`\`\`markdown
 :::info Title here
-Your content goes here.
+Content goes here.
 :::
 \`\`\`
 
-### Available Types
+### Available types
 
 :::info Information
-Use for general information and context.
+General context and background.
 :::
 
-:::tip Pro Tip
-Use for helpful suggestions and best practices.
+:::tip Pro tip
+Helpful suggestions and best practices.
 :::
 
 :::warning Caution
-Use to warn about potential issues.
+Potential issues to watch for.
 :::
 
 :::danger Critical
-Use for critical warnings and breaking changes.
+Breaking changes or destructive actions.
 :::
 
-:::note Side Note
-Use for additional context that's not essential.
+:::note Side note
+Additional context that is not essential.
 :::
 
-## Collapsible Sections
+## Collapsible sections
 
 \`\`\`markdown
 :::details Click to expand
@@ -275,17 +259,16 @@ Hidden content goes here.
 :::
 \`\`\`
 
-:::details Advanced Markdown Features
-Quirex also supports:
+:::details Advanced features
 - Automatic table of contents generation
 - Heading anchor links with copy-on-click
 - Reading progress indicator
-- Estimated read time calculation
+- Estimated read time
 :::
 
 ---
 
-Now you know everything about writing Markdown in Quirex! Check out the **Editor Features** guide to learn about the admin panel.
+Next: **Editor Features** — learn about the admin panel and writing workflow.
 `,
     category: "guides",
     tags: ["markdown", "writing", "syntax"],
@@ -298,87 +281,72 @@ Now you know everything about writing Markdown in Quirex! Check out the **Editor
     id: "editor-features",
     title: "Editor Features",
     slug: "editor-features",
-    excerpt: "Learn about Quirex's powerful Markdown editor with formatting toolbar, keyboard shortcuts, and auto-save.",
+    excerpt: "Formatting toolbar, keyboard shortcuts, auto-save, revision history, and bulk import.",
     content: `# Editor Features
 
-The Quirex editor is designed for speed and productivity. It's not just a textarea — it's a full-featured writing environment.
+The editor is built for speed. Formatting toolbar, keyboard shortcuts, auto-save, and revision history are all built in.
 
-## Formatting Toolbar
-
-The editor includes a formatting toolbar with 18+ actions:
+## Formatting toolbar
 
 | Button | Action | Shortcut |
 |--------|--------|----------|
-| **B** | Bold | \`⌘B\` |
-| *I* | Italic | \`⌘I\` |
-| S̶ | Strikethrough | \`⌘⇧S\` |
-| H₁ | Heading 1 | — |
-| H₂ | Heading 2 | — |
-| • | Bullet list | — |
+| **B** | Bold | \`Cmd+B\` |
+| *I* | Italic | \`Cmd+I\` |
+| S | Strikethrough | \`Cmd+Shift+S\` |
+| H1 | Heading 1 | — |
+| H2 | Heading 2 | — |
+| List | Bullet list | — |
 | 1. | Numbered list | — |
-| ☐ | Task list | — |
-| ❝ | Blockquote | — |
-| \`</>\` | Code block | — |
-| 🔗 | Insert link | \`⌘K\` |
+| Task | Task list | — |
+| Quote | Blockquote | — |
+| Code | Code block | — |
+| Link | Insert link | \`Cmd+K\` |
 
-## Keyboard Shortcuts
-
-Power users can format text without leaving the keyboard:
+## Keyboard shortcuts
 
 \`\`\`
-⌘B          Bold
-⌘I          Italic
-⌘K          Insert link
-⌘Z          Undo
-⌘⇧Z         Redo
-Tab         Indent list
-⇧Tab        Outdent list
-Enter       Continue list (auto)
+Cmd+B        Bold
+Cmd+I        Italic
+Cmd+K        Insert link
+Cmd+Z        Undo
+Cmd+Shift+Z  Redo
+Tab          Indent list
+Shift+Tab    Outdent list
+Enter        Continue list
 \`\`\`
 
-:::tip List Continuation
-When you press Enter at the end of a list item, the editor automatically adds the next bullet or number. Press Enter twice to exit the list.
+:::tip
+Pressing Enter at the end of a list item automatically continues the list. Press Enter twice to exit.
 :::
 
-## Auto-Save
+## Auto-save
 
-Your work is automatically saved every **30 seconds**. You'll see a "Saved" indicator in the editor when changes are persisted.
+Content saves every 30 seconds to browser storage. It works offline and survives browser refreshes.
 
-The auto-save system:
-- Saves to browser localStorage
-- Works completely offline
-- Preserves unsaved changes across browser refreshes
+## Revision history
 
-## Revision History
+Every save creates a snapshot.
 
-Every time you save a post, Quirex creates a snapshot:
-
-1. Click the **History** button in the editor
+1. Click **History** in the editor
 2. Browse previous versions with timestamps
-3. View line-by-line diffs between versions
-4. **One-click restore** to any previous version
+3. View line-by-line diffs
+4. Restore any version with one click
 
-:::warning Revision Limits
-Each post can store up to **50 revisions**. Older revisions are automatically pruned to save storage.
+:::warning
+Each document stores up to 50 revisions. Older ones are pruned automatically.
 :::
 
-## Live Preview
+## Live preview
 
-The editor shows a split view:
-- **Left pane**: Raw Markdown source
-- **Right pane**: Rendered preview (updates as you type)
+The editor uses a split view — raw Markdown on the left, rendered output on the right, updating as you type.
 
-## Word Count & Read Time
+## Word count
 
-The editor displays:
-- Total word count
-- Estimated reading time (based on 200 WPM)
+The editor shows total word count and estimated reading time (200 words per minute).
 
 ## Templates
 
-Start new posts from pre-built templates:
-
-| Template | Use Case |
+| Template | Use case |
 |----------|----------|
 | Blank | Start from scratch |
 | Tutorial | Step-by-step guide |
@@ -386,13 +354,9 @@ Start new posts from pre-built templates:
 | Changelog | Release notes |
 | FAQ | Questions and answers |
 
-## Bulk Import
+## Bulk import
 
-Import existing documentation:
-
-1. Drag-and-drop \`.md\` or \`.mdx\` files
-2. Quirex parses frontmatter automatically
-3. Supports importing entire folders
+Drag and drop \`.md\` or \`.mdx\` files. Quirex parses frontmatter automatically:
 
 \`\`\`yaml
 ---
@@ -402,12 +366,12 @@ tags: [tutorial, beginner]
 published: true
 ---
 
-Your markdown content here...
+Content here...
 \`\`\`
 
 ---
 
-Ready to start writing? Head to the **Admin Panel** and create your first post!
+Next: **Search and Navigation** — command palette, keyboard nav, mobile gestures.
 `,
     category: "features",
     tags: ["editor", "admin", "shortcuts"],
@@ -420,88 +384,83 @@ Ready to start writing? Head to the **Admin Panel** and create your first post!
     id: "search-navigation",
     title: "Search & Navigation",
     slug: "search-navigation",
-    excerpt: "Learn about instant search, keyboard navigation, mobile gestures, and reading features.",
-    content: `# Search & Navigation
+    excerpt: "Command palette search, keyboard navigation, mobile gestures, and reading tools.",
+    content: `# Search and Navigation
 
-Quirex is designed for fast, keyboard-first navigation with full mobile support.
+Keyboard-first navigation with full mobile support.
 
-## Instant Search
+## Command palette
 
-Press \`⌘K\` (Mac) or \`Ctrl+K\` (Windows/Linux) to open the search dialog.
+Press \`Cmd+K\` (Mac) or \`Ctrl+K\` (Windows/Linux) to open search.
 
-Features:
 - **Fuzzy matching** — finds results even with typos
 - **Full-text search** — searches titles, content, and tags
-- **Keyboard navigation** — use ↑↓ to select, Enter to open
+- **Keyboard navigation** — arrow keys to select, Enter to open
 - **Recent searches** — quickly access previous queries
 
-:::tip Search Syntax
-Search for specific content types:
-- \`tag:api\` — find posts tagged "api"
-- \`category:guides\` — find posts in guides category
+:::tip
+Filter by type: \`tag:api\` finds posts tagged "api", \`category:guides\` filters by category.
 :::
 
-## Sidebar Navigation
+## Sidebar
 
-The sidebar shows all documentation organized by category:
-- **Collapsible sections** — click category names to expand/collapse
-- **Active highlighting** — current page is highlighted
-- **Version filtering** — only shows docs for selected version
+Documentation is organized by category in the sidebar:
+- Collapsible sections
+- Active page highlighting
+- Keyboard accessible
 
-## Table of Contents
+## Table of contents
 
-Each documentation page shows a table of contents:
-- **Desktop**: Fixed on the right side
-- **Mobile**: Collapsible dropdown at the top
-- **Auto-highlighting** — current section is highlighted as you scroll
+Each page generates a table of contents from its headings:
+- **Desktop** — fixed on the right side
+- **Mobile** — collapsible dropdown at the top
+- Highlights the current section as you scroll
 
-## Keyboard Navigation
-
-Navigate between documents without a mouse:
+## Keyboard shortcuts
 
 | Shortcut | Action |
 |----------|--------|
-| \`⌘K\` | Open search |
-| \`Alt+←\` | Previous document |
-| \`Alt+→\` | Next document |
+| \`Cmd+K\` | Open search |
+| \`Alt+Left\` | Previous document |
+| \`Alt+Right\` | Next document |
 | \`Esc\` | Close dialogs |
 
-## Mobile Gestures
+## Mobile gestures
 
 On touch devices:
-- **Swipe left** → Navigate to next document
-- **Swipe right** → Navigate to previous document (or open sidebar)
-- **Swipe left on sidebar** → Close sidebar
+- **Swipe left** — next document
+- **Swipe right** — previous document or open sidebar
+- **Swipe left on sidebar** — close it
 
-:::info Gesture Hints
-On mobile, you'll see a hint at the bottom of doc pages: "Swipe ← → to navigate between docs"
+:::info
+A hint appears at the bottom of doc pages on mobile.
 :::
 
-## Reading Features
+## Reading tools
 
-### Reading Progress
-A progress bar at the top of the page shows how far you've scrolled through the document.
+### Progress bar
+A thin bar at the top shows scroll position.
 
-### Text-to-Speech
-Click the speaker icon to have the document read aloud. Supports play, pause, and speed controls.
+### Text-to-speech
+Click the speaker icon to listen. Supports play, pause, and speed controls.
 
 ### Bookmarks
-Click the bookmark icon to save any document for later. Access your bookmarks from the header.
+Save any page for later. Access bookmarks from the header.
 
-### Reading History
-Quirex tracks your reading progress. Resume where you left off, or review your reading history.
+### Reading history
+Tracks your progress. Resume where you left off.
 
 ## Breadcrumbs
 
-Every doc page shows breadcrumbs for context:
+Every page shows its position in the hierarchy:
 
-\`Home > Category > Document Title\`
+\`Home > Category > Page Title\`
 
-Click any breadcrumb to navigate up the hierarchy.
+Click any segment to navigate up.
 
 ---
 
-Next, learn about **Version Control** to manage documentation for different product versions.
+Next: **Authentication and Roles** — sign-in methods and permissions.
 `,
     category: "features",
     tags: ["search", "navigation", "mobile", "keyboard"],
@@ -514,86 +473,45 @@ Next, learn about **Version Control** to manage documentation for different prod
     id: "versioning",
     title: "Version Control",
     slug: "versioning",
-    excerpt: "Manage documentation for multiple product versions with revision history and doc versioning.",
+    excerpt: "Revision history for individual documents and changelog tracking.",
     content: `# Version Control
 
-Quirex provides two types of version control: **Revision History** (for individual posts) and **Doc Versioning** (for product releases).
+Quirex tracks changes at the document level with a built-in revision system.
 
-## Revision History
+## Revision history
 
-Every time you save a document, Quirex creates a snapshot.
+Every save creates a snapshot of the document.
 
-### Viewing History
+### Viewing history
 1. Open a document in the editor
-2. Click the **History** button
-3. Browse revisions by date/time
-4. View line-by-line diffs
+2. Click **History**
+3. Browse revisions by date and time
+4. View line-by-line diffs between versions
 
-### Restoring Versions
-Click **Restore** on any revision to revert the document. The current version becomes a new revision, so you never lose data.
+### Restoring versions
+Click **Restore** on any revision. The current version is preserved as a new snapshot, so nothing is lost.
 
-\`\`\`
-┌─────────────────────────────────────┐
-│  Revision History                   │
-├─────────────────────────────────────┤
-│  ● Mar 8, 2024 - 2:30 PM  (current) │
-│  ○ Mar 8, 2024 - 11:15 AM           │
-│  ○ Mar 7, 2024 - 4:45 PM            │
-│  ○ Mar 7, 2024 - 10:30 AM           │
-│  ○ Mar 6, 2024 - 3:20 PM            │
-└─────────────────────────────────────┘
-\`\`\`
-
-:::warning Storage Limits
-Each document stores up to 50 revisions. Older revisions are automatically pruned.
+:::warning
+Each document stores up to 50 revisions. Older ones are pruned automatically.
 :::
-
-## Doc Versioning
-
-For products with multiple releases, you can tag documentation by version.
-
-### Version Switcher
-The header includes a version dropdown:
-- Select which version to view
-- Persists across sessions
-- Filters sidebar and search results
-
-### Version Tags
-When creating/editing a post, assign it to versions:
-
-\`\`\`yaml
-versions: ["v1.0", "v1.1", "v2.0"]
-\`\`\`
-
-### Use Cases
-
-| Scenario | Solution |
-|----------|----------|
-| New feature in v2.0 | Create doc, tag with "v2.0" only |
-| Deprecated in v2.0 | Remove "v2.0" from version tags |
-| Changed behavior | Create separate docs per version |
-| Universal docs | Tag with all versions |
 
 ## Changelog
 
-Track changes across releases with the built-in changelog:
+Track changes across releases at \`/changelog\`:
 
-1. Navigate to \`/changelog\` 
-2. View updates in a timeline format
-3. Filter by type: New, Fix, Improvement, Breaking
+1. View updates in timeline format
+2. Filter by type: New, Fix, Improvement, Breaking
 
-### Status Badges
-
-| Badge | Use For |
+| Badge | Use for |
 |-------|---------|
-| 🟢 New | New features |
-| 🔵 Improvement | Enhancements |
-| 🟡 Fix | Bug fixes |
-| 🔴 Breaking | Breaking changes |
+| New | New features |
+| Improvement | Enhancements |
+| Fix | Bug fixes |
+| Breaking | Breaking changes |
 
 ---
 
-Next, explore **Internationalization** to make your docs available in multiple languages.
+Next: **Authentication and Roles** — sign-in methods and access control.
 `,
     category: "features",
     tags: ["versions", "history", "changelog"],
@@ -603,145 +521,44 @@ Next, explore **Internationalization** to make your docs available in multiple l
     author: "Quirex Team",
   },
   {
-    id: "internationalization",
-    title: "Internationalization",
-    slug: "internationalization",
-    excerpt: "Make your documentation accessible worldwide with built-in multi-language support.",
-    content: `# Internationalization (i18n)
-
-Quirex includes built-in support for **8 languages**, making your documentation accessible to a global audience.
-
-## Supported Languages
-
-| Code | Language | Flag |
-|------|----------|------|
-| en | English | 🇺🇸 |
-| es | Español | 🇪🇸 |
-| fr | Français | 🇫🇷 |
-| de | Deutsch | 🇩🇪 |
-| ja | 日本語 | 🇯🇵 |
-| zh | 中文 | 🇨🇳 |
-| pt | Português | 🇧🇷 |
-| ko | 한국어 | 🇰🇷 |
-
-## Language Switcher
-
-Find the language switcher in the header:
-1. Click the globe icon dropdown
-2. Select your preferred language
-3. UI text updates immediately
-4. Preference is saved for future visits
-
-## What Gets Translated?
-
-### Automatically Translated
-- Navigation labels
-- Button text
-- Error messages
-- Search placeholders
-- Form labels
-- Footer content
-- Feature descriptions
-
-### Content (Your Docs)
-Documentation content is **not automatically translated**. You have two options:
-
-1. **Write in one language** — Most users read in their browser's language
-2. **Create translated versions** — Duplicate docs with translated content
-
-:::tip Translation Workflow
-For translated content, use a naming convention:
-- \`getting-started\` (English)
-- \`getting-started-es\` (Spanish)
-- \`getting-started-fr\` (French)
-
-Then link between versions in the content.
-:::
-
-## RTL Support
-
-For right-to-left languages (Arabic, Hebrew), Quirex automatically adjusts layout direction.
-
-## Date & Time Formatting
-
-Dates are automatically formatted according to the selected language:
-
-| Language | Format |
-|----------|--------|
-| English | Mar 8, 2024 |
-| German | 8. März 2024 |
-| Japanese | 2024年3月8日 |
-| Chinese | 2024年3月8日 |
-
----
-
-Learn more about **Authentication & Roles** to control who can access and edit your docs.
-`,
-    category: "features",
-    tags: ["i18n", "languages", "localization"],
-    published: true,
-    createdAt: new Date("2024-01-06").toISOString(),
-    updatedAt: new Date("2024-03-08").toISOString(),
-    author: "Quirex Team",
-  },
-  {
     id: "authentication",
     title: "Authentication & Roles",
     slug: "authentication",
-    excerpt: "Secure your documentation with user authentication, role-based access control, and multiple sign-in methods.",
-    content: `# Authentication & Roles
+    excerpt: "Sign-in methods, role-based access control, and user management.",
+    content: `# Authentication and Roles
 
-Quirex includes a complete authentication system with role-based access control.
+Quirex includes authentication with role-based permissions.
 
-## Sign-In Methods
-
-Users can sign in using:
+## Sign-in methods
 
 | Method | Description |
 |--------|-------------|
-| Email/Password | Traditional account creation |
-| Google OAuth | One-click Google sign-in |
-| Magic Link | Passwordless email link |
+| Email and password | Standard account creation |
+| Google OAuth | One-click sign-in |
+| Magic link | Passwordless email link |
 
-### Password Requirements
-- Minimum 6 characters
-- Email verification required (unless disabled)
+Password minimum: 6 characters. Email verification is required by default.
 
-## User Roles
+## Roles
 
-Quirex uses three permission levels:
+Three permission levels:
 
-### 👑 Admin
-Full access to everything:
-- Create, edit, delete any content
-- Manage user roles
-- Access analytics
-- Configure settings
-- Theme customization
-- Import/export data
+### Admin
+Full access — create, edit, delete content. Manage users, analytics, settings, themes, imports.
 
-### ✏️ Editor
-Content management access:
-- Create and edit posts
-- Manage categories and tags
-- Access revision history
-- Import content
+### Editor
+Content access — create and edit posts, manage categories and tags, view revision history, import content.
 
-### 👁️ Viewer
-Read-only access:
-- View all published content
-- Use bookmarks and comments
-- Access reading history
+### Viewer
+Read-only — view published content, use bookmarks and comments, access reading history.
 
-:::info First User
-The first user to sign up automatically becomes an Admin. Subsequent users are assigned the Viewer role by default.
+:::info
+The first user to sign up is automatically assigned the Admin role. All subsequent users start as Viewers.
 :::
 
-## Protected Routes
+## Protected routes
 
-Certain pages require authentication:
-
-| Route | Required Role |
+| Route | Required role |
 |-------|---------------|
 | \`/admin\` | Editor or Admin |
 | \`/analytics\` | Admin |
@@ -749,27 +566,25 @@ Certain pages require authentication:
 | \`/theme\` | Admin |
 | \`/import/notion\` | Editor or Admin |
 
-## Managing Users
+## User management
 
 Admins can manage users at \`/users\`:
 
 1. View all registered users
 2. See current roles
-3. Promote/demote users
+3. Promote or demote users
 4. Remove users
 
-## Password Reset
+## Password reset
 
-Users can reset their password:
-
-1. Click "Forgot password?" on login
-2. Enter email address
-3. Receive reset link via email
-4. Set new password
+1. Click "Forgot password?" on the login page
+2. Enter your email
+3. Follow the reset link
+4. Set a new password
 
 ---
 
-That covers the core features! Explore **Customization** to learn about theming and configuration.
+Next: **Theming and Customization** — colors, dark mode, PWA, and configuration.
 `,
     category: "features",
     tags: ["auth", "roles", "security", "users"],
@@ -782,42 +597,37 @@ That covers the core features! Explore **Customization** to learn about theming 
     id: "theming",
     title: "Theming & Customization",
     slug: "theming",
-    excerpt: "Customize Quirex's appearance with themes, colors, and branding options.",
-    content: `# Theming & Customization
+    excerpt: "Light and dark themes, CSS variables, site configuration, and PWA support.",
+    content: `# Theming and Customization
 
-Make Quirex yours with powerful theming options.
+## Light and dark mode
 
-## Light & Dark Mode
+System-aware theming with three options:
+- **Auto** — follows OS preference
+- **Light** — bright color palette
+- **Dark** — reduced brightness, OLED-friendly
 
-Quirex includes system-aware theming:
+Toggle with the icon in the header.
 
-- **Auto** — Follows system preference
-- **Light** — Bright, warm color palette
-- **Dark** — Easy on the eyes, OLED-friendly
-
-Toggle themes using the sun/moon icon in the header.
-
-:::tip Zero Flash
-Quirex loads the correct theme before rendering, so there's no flash of the wrong theme on page load.
+:::tip
+The theme loads before first paint — no flash of the wrong mode.
 :::
 
-## Theme Editor
+## Theme editor
 
 Admins can customize colors at \`/theme\`:
 
-### Customizable Properties
-
 | Property | Description |
 |----------|-------------|
-| Primary Color | Accent color for links, buttons |
+| Primary | Accent color for links and buttons |
 | Background | Page background |
 | Foreground | Text color |
-| Muted | Secondary text, borders |
+| Muted | Secondary text and borders |
 | Card | Card backgrounds |
 
-### CSS Variables
+### CSS variables
 
-Themes use CSS custom properties:
+Themes are driven by CSS custom properties:
 
 \`\`\`css
 :root {
@@ -827,57 +637,42 @@ Themes use CSS custom properties:
   --primary-foreground: 0 0% 98%;
   --muted: 240 4.8% 95.9%;
   --muted-foreground: 240 3.8% 46.1%;
-  /* ... more variables */
 }
 \`\`\`
 
-## Site Configuration
-
-Customize site identity in the config:
+## Site configuration
 
 \`\`\`typescript
 const siteConfig = {
   name: "Quirex",
   heading: "Documentation",
   tagline: "Beautiful docs, zero config",
-  badge: "Beta", // Optional badge next to name
-  footer: "© 2024 Your Company",
-  // ... more options
+  badge: "Beta",
+  footer: "Your Company",
 };
 \`\`\`
 
-## PWA Support
+## PWA support
 
 Quirex is a Progressive Web App:
-
-- **Installable** — Add to home screen
-- **Offline** — Works without internet
-- **Fast** — Service worker caching
-
-### Installing on Mobile
-1. Visit your docs site in Safari/Chrome
-2. Tap "Add to Home Screen"
-3. Access docs like a native app
-
-### Installing on Desktop
-1. Look for the install icon in the address bar
-2. Click "Install"
-3. Access from your applications
+- **Installable** — add to home screen on mobile or desktop
+- **Offline capable** — service worker caches pages
+- **Fast** — cached assets load instantly
 
 ## SEO
 
-Quirex generates proper meta tags:
+Meta tags are generated per page:
 
 \`\`\`html
 <title>Page Title — Site Name</title>
-<meta name="description" content="Page excerpt...">
+<meta name="description" content="Page excerpt">
 <meta property="og:title" content="Page Title">
-<meta property="og:description" content="Page excerpt...">
+<meta property="og:description" content="Page excerpt">
 \`\`\`
 
 ---
 
-You're now a Quirex expert! 🎉 Start creating amazing documentation.
+That covers the platform. Open the admin panel and start writing.
 `,
     category: "customization",
     tags: ["theme", "design", "pwa", "branding"],
@@ -890,16 +685,18 @@ You're now a Quirex expert! 🎉 Start creating amazing documentation.
 
 export function getPosts(): Post[] {
   const seedSynced = localStorage.getItem(SEED_VERSION_KEY) === importedSeedVersion;
+  const postsBodySynced = localStorage.getItem(DEFAULT_POSTS_VERSION_KEY) === DEFAULT_POSTS_VERSION;
   const stored = localStorage.getItem(POSTS_KEY);
-  if (!stored || !seedSynced) {
-    // Merge defaultPosts + importedPosts, deduped by slug
-    const base: Post[] = stored ? JSON.parse(stored) : defaultPosts;
+  if (!stored || !seedSynced || !postsBodySynced) {
+    // Merge defaultPosts + importedPosts, deduped by slug (refresh base when seed or default doc set changes)
+    const base: Post[] = !postsBodySynced ? defaultPosts : stored ? JSON.parse(stored) : defaultPosts;
     const merged = [...base];
     for (const ip of importedPosts) {
       if (!merged.some((p) => p.slug === ip.slug)) merged.push(ip);
     }
     localStorage.setItem(POSTS_KEY, JSON.stringify(merged));
     localStorage.setItem(SEED_VERSION_KEY, importedSeedVersion);
+    localStorage.setItem(DEFAULT_POSTS_VERSION_KEY, DEFAULT_POSTS_VERSION);
     return merged;
   }
   return JSON.parse(stored);

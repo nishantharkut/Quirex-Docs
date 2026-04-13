@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPublicProfile, fetchPublicProfiles, isProfilePublic } from "@/lib/blogVisibility";
+import { getLocalFallbackBlogPosts, getLocalFallbackPostBySlug } from "@/lib/docsFallback";
 
 export interface BlogPost {
   id: string;
@@ -20,37 +21,51 @@ export interface BlogPost {
   author_avatar?: string;
 }
 
-async function fetchPublishedPosts(): Promise<BlogPost[]> {
-  const { data: posts, error } = await supabase
-    .from("posts")
-    .select("*")
-    .eq("published", true)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  if (!posts || posts.length === 0) return [];
-
-  // Fetch author profiles for all unique user_ids
-  const userIds = [...new Set(posts.map((p) => p.user_id))];
-  const profiles = await fetchPublicProfiles(userIds);
-
-  const profileMap = new Map(
-    (profiles || []).map((p) => [p.user_id, p])
+/** Reading order for seeded docs when the API has no public posts */
+function sortDocsByCreatedAsc(posts: BlogPost[]): BlogPost[] {
+  return [...posts].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
+}
 
-  const visible = posts.filter((post) => {
-    const profile = profileMap.get(post.user_id);
-    return isProfilePublic(profile);
-  });
+function localFallbackList(): BlogPost[] {
+  return sortDocsByCreatedAsc(getLocalFallbackBlogPosts());
+}
 
-  return visible.map((post) => {
-    const profile = profileMap.get(post.user_id);
-    return {
-      ...post,
-      author_name: profile?.display_name || "Anonymous",
-      author_avatar: profile?.avatar_url || undefined,
-    };
-  });
+async function fetchPublishedPosts(): Promise<BlogPost[]> {
+  try {
+    const { data: posts, error } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("published", true)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    if (!posts || posts.length === 0) return localFallbackList();
+
+    const userIds = [...new Set(posts.map((p) => p.user_id))];
+    const profiles = await fetchPublicProfiles(userIds);
+
+    const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+
+    const visible = posts.filter((post) => {
+      const profile = profileMap.get(post.user_id);
+      return isProfilePublic(profile);
+    });
+
+    if (visible.length === 0) return localFallbackList();
+
+    return visible.map((post) => {
+      const profile = profileMap.get(post.user_id);
+      return {
+        ...post,
+        author_name: profile?.display_name || "Anonymous",
+        author_avatar: profile?.avatar_url || undefined,
+      };
+    });
+  } catch {
+    return localFallbackList();
+  }
 }
 
 async function fetchPostBySlug(slug: string): Promise<BlogPost | null> {
@@ -60,7 +75,9 @@ async function fetchPostBySlug(slug: string): Promise<BlogPost | null> {
     .eq("slug", slug)
     .maybeSingle();
 
-  if (error || !post) return null;
+  if (error || !post) {
+    return getLocalFallbackPostBySlug(slug);
+  }
 
   let profile = null;
   let profileError = null;
